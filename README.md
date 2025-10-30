@@ -42,7 +42,8 @@ npm run dev
 - `src/lib/supabase/server.ts`: 서버에서 Supabase 클라이언트 생성
 - `src/lib/supabase/client.ts`: 브라우저에서 Supabase 클라이언트 생성
 - `src/app/(auth)/signin/page.tsx`: 구글/깃허브/이메일 로그인 UI
-- `src/app/auth/callback/route.ts`: 세션 교환 후 대시보드로 리다이렉트
+- `src/app/auth/callback/page.tsx`: 클라이언트에서 세션 교환 후 `/dashboard`로 이동, access_token을 `/api/session`으로 전달해 HttpOnly JWT 쿠키(`app_jwt`) 저장
+- `src/app/api/session/route.ts`: POST된 토큰을 `app_jwt`로 세팅
 - `src/app/dashboard/page.tsx`: 보호된 페이지(서버 액션으로 로그아웃)
  - `src/app/auth/verify/page.tsx`: 이메일 인증 안내 및 재전송
  - `src/app/forgot-password/page.tsx`: 재설정 메일 요청
