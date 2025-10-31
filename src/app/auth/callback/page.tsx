@@ -58,6 +58,21 @@ export default function AuthCallbackPage() {
 					});
 					logAuth("/api/supabase-session response", { ok: resp2.ok, status: resp2.status });
 					setStatus(`/api/supabase-session 응답: ${resp2.status}`);
+
+					// 프로필 확인/생성 (signup/signin 구분)
+					setStatus("프로필 확인 중...");
+					const profileResp = await fetch("/api/profile/ensure", { method: "POST" });
+					const profileData = await profileResp.json();
+					logAuth("/api/profile/ensure response", {
+						ok: profileResp.ok,
+						isNew: profileData.isNew,
+						userId: profileData.profile?.id,
+					});
+					if (profileData.isNew) {
+						setStatus("회원가입 완료!");
+					} else {
+						setStatus("로그인 완료!");
+					}
 				}
 				if (type === "recovery") {
 					router.replace("/auth/update-password");

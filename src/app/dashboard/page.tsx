@@ -16,8 +16,9 @@ export default async function DashboardPage() {
 
 	async function signOut() {
 		"use server";
-		const supabase = await getServerSupabase();
-		await supabase.auth.signOut();
+		await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/auth/signout`, {
+			method: "POST",
+		});
 		redirect("/");
 	}
 

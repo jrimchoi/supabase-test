@@ -42,8 +42,10 @@ npm run dev
 - `src/lib/supabase/server.ts`: 서버에서 Supabase 클라이언트 생성
 - `src/lib/supabase/client.ts`: 브라우저에서 Supabase 클라이언트 생성
 - `src/app/(auth)/signin/page.tsx`: 구글/깃허브/이메일 로그인 UI
-- `src/app/auth/callback/page.tsx`: 클라이언트에서 세션 교환 후 `/dashboard`로 이동, access_token을 `/api/session`으로 전달해 HttpOnly JWT 쿠키(`app_jwt`) 저장
+- `src/app/auth/callback/page.tsx`: 클라이언트에서 세션 교환 후 `/dashboard`로 이동, access_token을 `/api/session`으로 전달해 HttpOnly JWT 쿠키(`app_jwt`) 저장, `/api/profile/ensure`로 프로필 확인/생성
 - `src/app/api/session/route.ts`: POST된 토큰을 `app_jwt`로 세팅
+- `src/app/api/profile/ensure/route.ts`: 프로필 존재 여부 확인, 없으면 생성 (signup/signin 구분)
+- `supabase/profiles.sql`: profiles 테이블 및 트리거 SQL
 - `src/app/dashboard/page.tsx`: 보호된 페이지(서버 액션으로 로그아웃)
  - `src/app/auth/verify/page.tsx`: 이메일 인증 안내 및 재전송
  - `src/app/forgot-password/page.tsx`: 재설정 메일 요청
@@ -56,6 +58,22 @@ npm run dev
 - `middleware.ts`가 요청마다 세션 쿠키를 최신 상태로 유지합니다.
 - 보호 페이지는 서버에서 `getUser()`로 사용자 여부를 확인해 미인증 시 `/signin`으로 리디렉트합니다.
 - 콜백 쿼리 `type=recovery` 수신 시 비밀번호 변경 페이지로 라우팅합니다.
+
+### 프로필 테이블 설정 (자동 signup/signin)
+1) Supabase SQL 에디터에서 `supabase/profiles.sql` 내용을 실행합니다:
+   - `profiles` 테이블 생성 (email, full_name, name, avatar_url, provider, bio, website, gender, phone_number 등)
+   - 기존 테이블에 새 컬럼 자동 추가 (마이그레이션)
+   - RLS 정책 설정
+   - `auth.users` INSERT 시 자동으로 `profiles`에도 INSERT하는 트리거 생성
+
+2) **기존 데이터 마이그레이션** (필수 - auth.users에 데이터가 있는 경우):
+   - `auth.users`에 사용자가 있지만 `profiles`에 없으면 `supabase/migrate-existing-profiles.sql`을 실행하여 모든 사용자에 대한 프로필 레코드를 생성합니다.
+   - 이 스크립트는 `auth.users`에 있지만 `profiles`에 없는 모든 사용자에 대해 프로필을 자동 생성합니다.
+
+3) Google/GitHub/Email 로그인 시:
+   - 첫 로그인(signup): `auth.users`에 자동 생성 → 트리거로 `profiles`에도 자동 생성
+   - 이후 로그인(signin): 기존 프로필 확인 → 대시보드로 이동
+   - 콜백 페이지에서 `/api/profile/ensure` 호출로 프로필 존재 여부 확인/생성
 
 ### RLS 예제 설정
 1) Supabase SQL 에디터에서 다음 스크립트를 실행합니다:
@@ -76,3 +94,22 @@ create policy if not exists "Notes delete own" on public.notes for delete using 
 ```
 
 2) 로그인 후 `/notes`에서 본인 노트를 추가/조회할 수 있습니다. RLS로 인해 다른 사용자의 데이터는 접근할 수 없습니다.
+
+### 사용자 확인 방법
+
+1) **Supabase Dashboard**:
+   - Authentication > Users: `auth.users` 테이블의 모든 사용자 확인
+   - Table Editor > `public.profiles`: 프로필 정보 확인
+
+2) **SQL Editor**:
+   ```sql
+   -- 모든 사용자 조회
+   SELECT id, email, created_at, raw_user_meta_data FROM auth.users;
+   
+   -- 프로필 조회
+   SELECT * FROM public.profiles ORDER BY created_at DESC;
+   ```
+
+3) **코드에서**:
+   - `/admin/users`: 관리자용 사용자 목록 페이지 (RLS 정책 조정 필요)
+   - 서버 컴포넌트: `await getServerSupabase().auth.getUser()` 로 현재 사용자 확인
