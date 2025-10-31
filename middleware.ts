@@ -25,10 +25,18 @@ export async function middleware(req: NextRequest) {
 
 	// 세션 쿠키를 최신 상태로 동기화
 	const { data } = await supabase.auth.getSession();
+	const appJwt = req.cookies.get("app_jwt")?.value ?? null;
+	const cookieHeader = req.headers.get("cookie") || "";
+	const cookieNames = cookieHeader
+		.split(";")
+		.map((s) => s.trim().split("=")[0])
+		.filter(Boolean);
 	logAuth("middleware", {
 		path: req.nextUrl.pathname,
 		user: data.session?.user?.id ?? null,
 		hasSession: Boolean(data.session),
+		cookies: cookieNames,
+		appJwt: Boolean(appJwt),
 	});
 	return res;
 }

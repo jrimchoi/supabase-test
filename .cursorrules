@@ -1,0 +1,184 @@
+# Supabase Auth + Next.js 프로젝트 규칙
+
+## 프로젝트 개요
+- **Framework**: Next.js 16 (App Router)
+- **Language**: TypeScript (strict mode)
+- **Styling**: Tailwind CSS v4
+- **UI Library**: shadcn/ui (new-york style, zinc base color)
+- **Auth**: Supabase Auth (Google, GitHub, Email OTP, Email/Password)
+- **Database**: Supabase PostgreSQL with RLS (Row Level Security)
+- **Package Manager**: npm
+
+## 프로젝트 구조
+
+```
+src/
+  app/                    # Next.js App Router
+    (auth)/              # Route group
+      signin/            # 로그인 페이지
+    admin/               # 관리자 페이지
+    api/                 # API Routes
+      auth/signout/      # 로그아웃 (Route Handler)
+      profile/ensure/    # 프로필 확인/생성
+      session/           # JWT 쿠키 저장
+      supabase-session/  # Supabase 세션 쿠키 저장
+    auth/                # 인증 관련
+      callback/          # OAuth 콜백 (클라이언트 컴포넌트)
+      verify/            # 이메일 인증 안내
+      update-password/  # 비밀번호 변경
+    dashboard/           # 보호된 페이지
+    profiles/            # 프로필 목록 (검색/페이징)
+    notes/               # RLS 예제
+  components/
+    ui/                  # shadcn/ui 컴포넌트
+    profiles/            # 프로필 관련 컴포넌트
+  lib/
+    supabase/
+      client.ts         # 브라우저 Supabase 클라이언트 (싱글턴)
+      server.ts         # 서버 Supabase 클라이언트 (읽기 전용)
+    logger.ts           # 인증 로그 유틸
+    utils.ts            # shadcn/ui utils
+middleware.ts           # 세션 쿠키 동기화
+supabase/               # SQL 스크립트
+  profiles.sql          # 프로필 테이블/트리거
+  notes.sql             # 노트 테이블/RLS
+  admin-policies.sql    # 관리자 RLS 정책
+  migrate-existing-profiles.sql  # 기존 데이터 마이그레이션
+```
+
+## 인증 및 세션 관리
+
+### 브라우저 클라이언트 (`src/lib/supabase/client.ts`)
+- 싱글턴 패턴 사용 (`getBrowserSupabase()`)
+- PKCE flow (`flowType: "pkce"`)
+- `detectSessionInUrl: true` (자동 세션 교환)
+- localStorage 키: `"app-auth"`
+
+### 서버 클라이언트 (`src/lib/supabase/server.ts`)
+- **중요**: Next.js 15 제약으로 서버 컴포넌트에서는 쿠키 읽기만 가능
+- `set()`, `remove()`는 no-op (미들웨어에서 처리)
+- 쿠키 수정이 필요하면 Route Handler에서 별도 클라이언트 생성
+
+### 미들웨어 (`middleware.ts`)
+- 모든 요청에서 Supabase 세션 쿠키 동기화
+- `supabase.auth.getSession()` 호출로 쿠키 자동 업데이트
+
+### 세션 이중 관리
+1. **브라우저**: localStorage에 저장 (PKCE code_verifier 포함)
+2. **서버**: HttpOnly 쿠키
+   - Supabase 세션 쿠키 (자동 관리)
+   - `app_jwt` 쿠키 (access_token 저장, 커스텀 API 인증용)
+
+### OAuth 플로우
+1. `/signin` → `signInWithOAuth()` → Provider 리다이렉트
+2. Provider 인증 완료 → `/auth/callback?code=...`
+3. 콜백 페이지: `detectSessionInUrl=true`로 자동 교환
+4. `/api/session`에 access_token 전달 → `app_jwt` 쿠키 저장
+5. `/api/supabase-session`에 access_token/refresh_token 전달 → 서버 쿠키 설정
+6. `/api/profile/ensure`로 프로필 확인/생성 (signup/signin 구분)
+7. `/dashboard`로 리다이렉트
+
+## 데이터베이스 스키마
+
+### `public.profiles` 테이블
+- **Primary Key**: `id` (uuid, references `auth.users.id`)
+- **컬럼**: email, full_name, name, avatar_url, provider, bio, website, gender, phone_number, created_at, updated_at
+- **RLS**: 본인 프로필만 조회/수정 가능
+- **트리거**: `auth.users` INSERT 시 자동으로 `profiles`에도 INSERT
+
+### `public.notes` 테이블
+- **컬럼**: id, user_id, content, created_at
+- **RLS**: 본인 노트만 CRUD 가능
+
+## 코딩 규칙
+
+### 파일 네이밍
+- 컴포넌트: PascalCase (예: `ProfilesList.tsx`)
+- 유틸/라이브러리: camelCase (예: `getServerSupabase()`)
+- Route Handler: `route.ts`
+- 페이지: `page.tsx`
+
+### Import 경로
+- 절대 경로 사용: `@/components/ui/button`
+- `tsconfig.json`의 `paths` 설정 활용
+
+### 컴포넌트 분리
+- UI 컴포넌트는 `src/components/` 디렉토리
+- 재사용 가능한 컴포넌트는 분리
+- shadcn/ui 컴포넌트는 `src/components/ui/`
+
+### 서버/클라이언트 구분
+- 서버 컴포넌트 기본 (async 가능)
+- `"use client"`는 상태/이벤트 핸들러 필요 시만
+- 서버 액션: `"use server"` 지시어 사용
+
+### 에러 처리
+- try-catch 사용
+- `logAuth()`로 인증 관련 로그 기록
+- 사용자에게는 간단한 메시지, 로그에는 상세 정보
+
+### 타입 안전성
+- `unknown` 타입 사용 후 타입 가드로 검증
+- `err instanceof Error`로 에러 타입 확인
+- Supabase 타입 활용
+
+### 쿠키 제약 사항
+- **서버 컴포넌트**: 읽기 전용 (`cookies().get()`)
+- **Route Handler**: 읽기/쓰기 가능 (`NextResponse.cookies.set()`)
+- **Server Action**: 읽기 전용 또는 Route Handler 호출
+
+### 검색 및 페이징
+- Supabase의 `.or()` 및 `.ilike()` 사용
+- `.range(offset, offset + pageSize - 1)`로 페이징
+- `count: "exact"`로 총 개수 조회
+
+## 환경 변수
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL="https://YOUR-PROJECT-REF.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="YOUR-ANON-KEY"
+NEXT_PUBLIC_SITE_URL="http://localhost:3000"  # 개발: localhost, 배포: 실제 도메인
+```
+
+## 인증 로그
+
+- `logAuth()` 함수로 인증 플로우 로깅
+- 개발 환경에서는 항상 활성화
+- 프로덕션에서는 `NEXT_PUBLIC_DEBUG_AUTH=1` 또는 `DEBUG_AUTH=1`로 제어
+
+## 보안 고려사항
+
+1. **RLS 정책**: 모든 테이블에 Row Level Security 활성화
+2. **JWT 쿠키**: HttpOnly, Secure (프로덕션), SameSite=lax
+3. **세션 관리**: 미들웨어에서 자동 동기화
+4. **쿠키 수정**: 서버 컴포넌트에서는 불가, Route Handler에서만 가능
+
+## 일반 규칙
+
+1. **한국어 주석/메시지**: 사용자 대상 텍스트는 한국어
+2. **코드 주석**: 복잡한 로직에만 간단히
+3. **에러 메시지**: 사용자 친화적, 로그에는 상세 정보
+4. **컴포넌트 분리**: 재사용성과 유지보수성 고려
+5. **타입 안전성**: TypeScript strict mode 준수
+6. **일관성**: 기존 패턴과 스타일 유지
+
+## API 엔드포인트
+
+- `POST /api/session`: access_token을 `app_jwt` 쿠키로 저장
+- `POST /api/supabase-session`: access_token/refresh_token으로 서버 쿠키 설정
+- `POST /api/profile/ensure`: 프로필 확인/생성 (트리거 실패 시 백업)
+- `POST /api/auth/signout`: 로그아웃 (Route Handler)
+
+## SQL 실행 순서
+
+1. `supabase/profiles.sql`: 테이블 생성, RLS 정책, 트리거
+2. `supabase/migrate-existing-profiles.sql`: 기존 사용자 프로필 생성 (필요 시)
+3. `supabase/notes.sql`: 노트 테이블 및 RLS (예제)
+4. `supabase/admin-policies.sql`: 관리자 RLS 정책 (선택)
+
+## 참고사항
+
+- Supabase 콘솔에서 OAuth Redirect URLs 설정 필수
+- 프로덕션 배포 시 `NEXT_PUBLIC_SITE_URL` 실제 도메인으로 변경
+- RLS 정책 때문에 본인 데이터만 조회됨 (관리자 권한 필요 시 별도 정책 추가)
+

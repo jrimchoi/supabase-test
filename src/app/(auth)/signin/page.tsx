@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getBrowserSupabase } from "@/lib/supabase/client";
+import { logAuth } from "@/lib/logger";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,7 +28,12 @@ export default function SignInPage() {
 		setLoading(true);
 		setMessage(null);
 		try {
-			const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`;
+			const origin =
+				typeof globalThis !== "undefined" && globalThis.window
+					? globalThis.window.location.origin
+					: process.env.NEXT_PUBLIC_SITE_URL;
+			const redirectTo = `${origin}/auth/callback`;
+			logAuth("signInWithProvider", { provider, redirectTo });
 			const { error } = await supabase.auth.signInWithOAuth({
 				provider,
 				options: {
