@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getBrowserSupabase } from "@/lib/supabase/client";
 import { logAuth } from "@/lib/logger";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,8 @@ const supabase = getBrowserSupabase();
 
 export default function SignInPage() {
 	const router = useRouter();
+	const searchParams = useSearchParams();
+	const redirectTo = searchParams.get("redirectTo") || "/admin";
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [loading, setLoading] = useState(false);
@@ -32,12 +34,14 @@ export default function SignInPage() {
 				typeof globalThis !== "undefined" && globalThis.window
 					? globalThis.window.location.origin
 					: process.env.NEXT_PUBLIC_SITE_URL;
-			const redirectTo = `${origin}/auth/callback`;
-			logAuth("signInWithProvider", { provider, redirectTo });
+			
+			// redirectTo를 callback URL에 query parameter로 전달
+			const callbackUrl = `${origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`;
+			logAuth("signInWithProvider", { provider, callbackUrl, finalRedirect: redirectTo });
 			const { error } = await supabase.auth.signInWithOAuth({
 				provider,
 				options: {
-					redirectTo,
+					redirectTo: callbackUrl,
 				},
 			});
 			if (error) throw error;
@@ -79,7 +83,7 @@ export default function SignInPage() {
 				password,
 			});
 			if (error) throw error;
-			router.push("/dashboard");
+			router.push(redirectTo);
 		} catch (err: unknown) {
 			const msg = err instanceof Error ? err.message : "이메일/비밀번호 로그인에 실패했습니다";
 			setMessage(msg);

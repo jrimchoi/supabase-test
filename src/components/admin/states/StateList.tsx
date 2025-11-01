@@ -1,0 +1,214 @@
+'use client'
+
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { ScrollableTable } from '@/components/ui/scrollable-table'
+import { StateDialog } from './StateDialog'
+import { DeleteStateDialog } from './DeleteStateDialog'
+import { PlusCircle, Edit, Trash2, CheckCircle, Circle } from 'lucide-react'
+import { format } from 'date-fns'
+import { ko } from 'date-fns/locale'
+
+type State = {
+  id: string
+  name: string
+  description: string | null
+  policyId: string
+  order: number
+  isInitial: boolean
+  isFinal: boolean
+  createdAt: Date
+  updatedAt: Date
+  policy: {
+    id: string
+    name: string
+    version: number
+  }
+  _count?: {
+    permissions: number
+    fromTransitions: number
+    toTransitions: number
+  }
+}
+
+type Policy = {
+  id: string
+  name: string
+  version: number
+}
+
+export function StateList({
+  initialStates,
+  availablePolicies,
+}: {
+  initialStates: State[]
+  availablePolicies: Policy[]
+}) {
+  const [selectedState, setSelectedState] = useState<State | null>(null)
+  const [stateToDelete, setStateToDelete] = useState<State | null>(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isPending, startTransition] = useTransition()
+  const router = useRouter()
+
+  const handleCreate = () => {
+    setSelectedState(null)
+    setIsDialogOpen(true)
+  }
+
+  const handleEdit = (state: State) => {
+    setSelectedState(state)
+    setIsDialogOpen(true)
+  }
+
+  const handleDelete = (state: State) => {
+    setStateToDelete(state)
+    setIsDeleteDialogOpen(true)
+  }
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex-shrink-0 mb-2">
+        <Button onClick={handleCreate}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          새 State 생성
+        </Button>
+      </div>
+
+      <ScrollableTable
+        header={
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>이름</TableHead>
+                <TableHead>설명</TableHead>
+                <TableHead className="w-48">Policy</TableHead>
+                <TableHead className="w-20">순서</TableHead>
+                <TableHead className="w-24">초기</TableHead>
+                <TableHead className="w-24">최종</TableHead>
+                <TableHead className="w-28">권한</TableHead>
+                <TableHead className="w-28">전이</TableHead>
+                <TableHead className="w-40">작업</TableHead>
+              </TableRow>
+            </TableHeader>
+          </Table>
+        }
+      >
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>이름</TableHead>
+              <TableHead>설명</TableHead>
+              <TableHead className="w-48">Policy</TableHead>
+              <TableHead className="w-20">순서</TableHead>
+              <TableHead className="w-24">초기</TableHead>
+              <TableHead className="w-24">최종</TableHead>
+              <TableHead className="w-28">권한</TableHead>
+              <TableHead className="w-28">전이</TableHead>
+              <TableHead className="w-40">작업</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {initialStates.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                  등록된 State가 없습니다
+                </TableCell>
+              </TableRow>
+            ) : (
+              initialStates.map((state) => (
+                <TableRow key={state.id}>
+                  <TableCell className="font-medium">{state.name}</TableCell>
+                  <TableCell className="max-w-xs truncate">
+                    {state.description || '-'}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">
+                      {state.policy.name} v{state.policy.version}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-center">{state.order}</TableCell>
+                  <TableCell className="text-center">
+                    {state.isInitial ? (
+                      <CheckCircle className="h-4 w-4 text-green-600 mx-auto" />
+                    ) : (
+                      <Circle className="h-4 w-4 text-muted-foreground mx-auto" />
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {state.isFinal ? (
+                      <CheckCircle className="h-4 w-4 text-blue-600 mx-auto" />
+                    ) : (
+                      <Circle className="h-4 w-4 text-muted-foreground mx-auto" />
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {state._count?.permissions || 0}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {(state._count?.fromTransitions || 0) +
+                      (state._count?.toTransitions || 0)}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(state)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(state)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </ScrollableTable>
+
+      <StateDialog
+        state={selectedState}
+        availablePolicies={availablePolicies}
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        onSuccess={() => {
+          setIsDialogOpen(false)
+          startTransition(() => {
+            router.refresh()
+          })
+        }}
+      />
+
+      <DeleteStateDialog
+        state={stateToDelete}
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onSuccess={() => {
+          setIsDeleteDialogOpen(false)
+          startTransition(() => {
+            router.refresh()
+          })
+        }}
+      />
+    </div>
+  )
+}
+

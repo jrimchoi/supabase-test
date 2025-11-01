@@ -1,0 +1,16 @@
+{
+  "sqltools.connections": [
+    {
+      "name": "Supabase Local",
+      "driver": "PostgreSQL",
+      "previewLimit": 50,
+      "server": "aws-1-ap-southeast-1.pooler.supabase.com",
+      "port": 6543,
+      "database": "postgres",
+      "username": "postgres.ckujlkdumhhtjkinngjf",
+      "password": "JFU1hbZtGSvFspnM",
+      "connectionTimeout": 30
+    }
+  ],
+  "sqltools.useNodeRuntime": true
+}

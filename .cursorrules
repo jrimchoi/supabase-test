@@ -176,9 +176,317 @@ NEXT_PUBLIC_SITE_URL="http://localhost:3000"  # 개발: localhost, 배포: 실�
 3. `supabase/notes.sql`: 노트 테이블 및 RLS (예제)
 4. `supabase/admin-policies.sql`: 관리자 RLS 정책 (선택)
 
+## Policy 기반 권한 관리 시스템
+
+### 데이터 모델 (Prisma)
+
+- **ORM**: Prisma Client
+- **데이터베이스**: PostgreSQL (Supabase)
+- **주요 테이블**:
+  - `Policy`: 권한 정책 (`types: string[]`)
+  - `State`: Policy 내 상태 (다중 next state 지원)
+  - `StateTransition`: State 간 전이 관계
+  - `Permission`: State별 권한 (User/Role/Group × create/view/modify/delete)
+  - `Role`, `Group`: 역할 및 그룹 정의
+  - `UserRole`, `UserGroup`: User와의 Many-to-Many 관계
+
+### State 전이 관리
+
+- `StateTransition` 테이블로 다중 next state 지원
+- `condition` 필드로 전이 조건 (expression) 저장
+- `order` 필드로 State 순서 관리 (State Diagram 표시용)
+
+### 권한 평가
+
+- **직접 권한**: `UserPermission` (User별)
+- **Role 권한**: `Permission` (targetType='role')
+- **Group 권한**: `Permission` (targetType='group')
+- **Expression 평가**: `expression` 필드 평가 결과가 `true`일 때만 적용
+- 평가기: `src/lib/policy/evaluator.ts`의 `evaluateExpression()`
+
+### UI 관리
+
+- **상태 다이어그램**: State 간 전이 관계 시각화
+- **권한 테이블**: Resource × Action × Target (User/Role/Group) 조합 관리
+- 각 행별로 Role, Group, User 권한 추가 가능
+- Expression 편집기로 조건 입력
+
+### 파일 위치
+
+- `prisma/schema.prisma`: Prisma 스키마 정의
+- `src/lib/policy/types.ts`: TypeScript 타입 정의
+- `src/lib/policy/evaluator.ts`: Expression 평가기
+
+### Expression 평가 보안
+
+- 현재는 `new Function()` 사용 (개발용)
+- 프로덕션에서는 Sandbox 환경 또는 AST 파서 사용 권장
+- 사용자 입력 expression은 반드시 검증 필요
+
+## 테이블 UI 구현 패턴
+
+### 기본 구조
+
+**모든 관리 페이지의 테이블은 다음 구조를 따릅니다:**
+
+#### 1. 페이지 컴포넌트 (`page.tsx`)
+
+```tsx
+const DEFAULT_PAGE_SIZE = 20
+
+type Props = {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
+
+export default async function SomePage({ searchParams }: Props) {
+  const params = await searchParams
+  const page = typeof params.page === 'string' ? parseInt(params.page, 10) : 1
+  const pageSizeParam = typeof params.pageSize === 'string' ? params.pageSize : String(DEFAULT_PAGE_SIZE)
+  const pageSize = pageSizeParam === 'all' ? 999999 : parseInt(pageSizeParam, 10)
+  
+  const { data, total } = await getData(page, pageSize)
+  const totalPages = Math.ceil(total / pageSize)
+
+  return (
+    <div className="flex flex-col h-[calc(100vh-6rem)]">
+      <div className="flex-shrink-0 mb-3">
+        <h1 className="text-2xl font-bold tracking-tight">제목</h1>
+        <p className="text-sm text-muted-foreground mt-1">설명</p>
+      </div>
+
+      <div className="flex-1 min-h-0">
+        <Suspense fallback={<div>로딩 중...</div>}>
+          <SomeList initialData={data} />
+        </Suspense>
+      </div>
+
+      <div className="flex-shrink-0 mt-1 mb-1">
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalCount={total}
+          pageSize={pageSize}
+          baseUrl="/admin/some"
+        />
+      </div>
+    </div>
+  )
+}
+```
+
+#### 2. List 컴포넌트 (`List.tsx`)
+
+```tsx
+'use client'
+
+import { ScrollableTable } from '@/components/ui/scrollable-table'
+
+export function SomeList({ initialData }: { initialData: Data[] }) {
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex-shrink-0 mb-2">
+        <Button onClick={handleCreate}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          새 항목 생성
+        </Button>
+      </div>
+
+      <ScrollableTable
+        header={
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>컬럼1</TableHead>
+                <TableHead className="w-20">컬럼2</TableHead>
+                {/* ... */}
+              </TableRow>
+            </TableHeader>
+          </Table>
+        }
+      >
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>컬럼1</TableHead>
+              <TableHead className="w-20">컬럼2</TableHead>
+              {/* 헤더와 동일한 구조! */}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {initialData.map((item) => (
+              <TableRow key={item.id}>
+                <TableCell>{item.name}</TableCell>
+                {/* ... */}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </ScrollableTable>
+    </div>
+  )
+}
+```
+
+#### 3. CSS 스타일 (`globals.css`)
+
+```css
+@layer components {
+  /* 테이블 행 높이 */
+  table tbody tr {
+    @apply h-12;  /* 48px */
+  }
+  
+  table thead tr {
+    @apply h-12;
+  }
+  
+  table tbody td,
+  table thead th {
+    @apply py-2 px-4;
+  }
+  
+  /* 스크롤 가능한 테이블 컨테이너 */
+  .scrollable-table-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+  
+  /* 헤더 영역 (고정) */
+  .table-header-wrapper {
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  
+  .table-header-wrapper table {
+    width: 100%;
+    table-layout: fixed;
+  }
+  
+  /* 바디 영역 (스크롤) */
+  .scrollable-table-wrapper {
+    overflow-y: auto;
+    flex: 1;
+  }
+  
+  .scrollable-table-wrapper table {
+    width: 100%;
+    table-layout: fixed;
+  }
+  
+  /* 바디 테이블의 헤더 숨김 */
+  .scrollable-table-wrapper thead {
+    visibility: hidden;
+    height: 0;
+  }
+  
+  /* 스크롤바 스타일링 */
+  .scrollable-table-wrapper::-webkit-scrollbar {
+    width: 10px;
+  }
+  
+  .scrollable-table-wrapper::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 5px;
+  }
+}
+```
+
+### 테이블 구현 규칙
+
+1. **헤더/바디 분리**: 두 개의 별도 테이블로 구성
+   - 헤더 테이블: 실제 표시용 (고정)
+   - 바디 테이블: 데이터용 (스크롤, 헤더는 숨김)
+
+2. **컬럼 정렬 유지**: 
+   - `table-layout: fixed` 사용
+   - 두 테이블의 헤더 구조가 **정확히 동일**해야 함
+   - 컬럼 너비 (`w-20`, `w-32` 등)도 동일하게 적용
+
+3. **스크롤바 위치**:
+   - 헤더 영역: `overflow: hidden` (스크롤바 없음)
+   - 바디 영역: `overflow-y: auto` (스크롤바 표시)
+
+4. **페이징**:
+   - 기본 페이지 크기: 20개
+   - 선택 가능: 10, 20, 50, 100, 전체
+   - URL 파라미터: `?page=2&pageSize=50`
+
+5. **높이 계산**:
+   - 페이지: `h-[calc(100vh-6rem)]`
+   - 제목 간격: `mb-3`
+   - 버튼 간격: `mb-2`
+   - 페이징 간격: `mt-1 mb-1`
+
+6. **Table 컴포넌트 수정**:
+   - `src/components/ui/table.tsx`의 `overflow-auto` 래퍼 제거됨
+   - 스크롤은 외부 컨테이너에서 처리
+
+### 주의사항
+
+- ⚠️ 헤더 테이블과 바디 테이블의 헤더 구조가 **정확히 일치**해야 컬럼이 정렬됨
+- ⚠️ 컬럼 너비 변경 시 두 곳 모두 수정 필요
+- ⚠️ `Table` 컴포넌트는 수정된 버전 사용 (래퍼 div 없음)
+
+### ScrollableTable 컴포넌트
+
+**위치**: `src/components/ui/scrollable-table.tsx`
+
+**기능**:
+- 헤더와 바디의 가로 스크롤 동기화
+- 긴 텍스트 가로 스크롤 지원
+
+**사용법**:
+```tsx
+import { ScrollableTable } from '@/components/ui/scrollable-table'
+
+<ScrollableTable
+  header={<Table><TableHeader>...</TableHeader></Table>}
+>
+  <Table>
+    <TableHeader>...</TableHeader>
+    <TableBody>...</TableBody>
+  </Table>
+</ScrollableTable>
+```
+
+## 반응형 디자인
+
+### AdminLayout (사이드바)
+
+**브레이크포인트**: 1024px (lg)
+
+#### Desktop (≥ 1024px)
+- 사이드바: 고정 (`relative`)
+- 너비: 256px (열림) / 64px (접힘)
+- 토글: X / Menu 아이콘
+
+#### Mobile (< 1024px)
+- 사이드바: 자동 숨김 (`fixed`, `-translate-x-full`)
+- 너비: 256px (항상)
+- 오버레이: 열렸을 때 반투명 배경
+- 햄버거 메뉴: 화면 왼쪽 상단 플로팅 버튼
+- 메뉴 클릭 시: 자동으로 사이드바 닫힘
+
+**화면 크기 감지**:
+```tsx
+useEffect(() => {
+  const checkScreenSize = () => {
+    const mobile = window.innerWidth < 1024
+    if (mobile) setSidebarOpen(false)
+  }
+  window.addEventListener('resize', checkScreenSize)
+}, [])
+```
+
 ## 참고사항
 
 - Supabase 콘솔에서 OAuth Redirect URLs 설정 필수
 - 프로덕션 배포 시 `NEXT_PUBLIC_SITE_URL` 실제 도메인으로 변경
 - RLS 정책 때문에 본인 데이터만 조회됨 (관리자 권한 필요 시 별도 정책 추가)
+- Prisma 사용 시 `.env.local`에 `DATABASE_URL` 설정 필요
 

@@ -1,8 +1,29 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { logAuth } from "@/lib/logger";
 
 export async function middleware(req: NextRequest) {
+	// 공개 경로 먼저 체크 (빠른 처리)
+	const publicPaths = [
+		"/signin",
+		"/auth/callback",
+		"/auth/verify",
+		"/forgot-password",
+		"/api/auth/signout",
+		"/api/session",
+		"/api/supabase-session",
+		"/api/profile/ensure",
+	];
+
+	const isPublicPath = publicPaths.some((path) =>
+		req.nextUrl.pathname.startsWith(path)
+	);
+
+	// 공개 경로는 바로 통과
+	if (isPublicPath) {
+		return NextResponse.next();
+	}
+
+	// 세션 체크가 필요한 경로
 	const res = NextResponse.next();
 
 	const supabase = createServerClient(
@@ -23,21 +44,27 @@ export async function middleware(req: NextRequest) {
 		}
 	);
 
-	// 세션 쿠키를 최신 상태로 동기화
+	// 세션 체크
 	const { data } = await supabase.auth.getSession();
-	const appJwt = req.cookies.get("app_jwt")?.value ?? null;
-	const cookieHeader = req.headers.get("cookie") || "";
-	const cookieNames = cookieHeader
-		.split(";")
-		.map((s) => s.trim().split("=")[0])
-		.filter(Boolean);
-	logAuth("middleware", {
+
+	console.log('🔒 [MIDDLEWARE]', {
 		path: req.nextUrl.pathname,
-		user: data.session?.user?.id ?? null,
-		hasSession: Boolean(data.session),
-		cookies: cookieNames,
-		appJwt: Boolean(appJwt),
+		hasSession: !!data.session,
+		user: data.session?.user?.email || null,
 	});
+
+	// 세션 없으면 로그인 페이지로 리다이렉트
+	if (!data.session) {
+		console.log('🚫 세션 없음! → /signin');
+		const redirectUrl = new URL("/signin", req.url);
+		// 루트(/) 경로가 아닌 경우에만 redirectTo 추가
+		if (req.nextUrl.pathname !== "/") {
+			redirectUrl.searchParams.set("redirectTo", req.nextUrl.pathname);
+		}
+		return NextResponse.redirect(redirectUrl);
+	}
+
+	console.log('✅ 접근 허용');
 	return res;
 }
 

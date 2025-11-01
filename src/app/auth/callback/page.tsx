@@ -14,11 +14,12 @@ export default function AuthCallbackPage() {
 
 	useEffect(() => {
 		(async () => {
-				const url = globalThis.window?.location.href || "";
+			const url = globalThis.window?.location.href || "";
 			const type = search.get("type");
+			const redirectTo = search.get("redirectTo") || "/admin";
 			try {
 				setStatus("세션 교환(자동) 대기...");
-				logAuth("/auth/callback (client) start", { url, type, site: globalThis.window?.location.origin, env: process.env.NEXT_PUBLIC_SITE_URL });
+				logAuth("/auth/callback (client) start", { url, type, redirectTo, site: globalThis.window?.location.origin, env: process.env.NEXT_PUBLIC_SITE_URL });
 				// detectSessionInUrl=true 이므로 클라이언트 초기화 시 자동 교환됨. 여기서 폴링해 확인
 				let session = (await supabase.auth.getSession()).data.session;
 				for (let i = 0; i < 20 && !session; i++) {
@@ -78,8 +79,8 @@ export default function AuthCallbackPage() {
 					router.replace("/auth/update-password");
 					return;
 				}
-				setStatus("대시보드로 이동...");
-				router.replace("/dashboard");
+				setStatus(`${redirectTo}로 이동...`);
+				router.replace(redirectTo);
 			} catch (e) {
 				logAuth("client exchange error", e);
 				setStatus("오류: 교환 실패");
