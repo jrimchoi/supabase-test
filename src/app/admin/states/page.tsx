@@ -1,7 +1,6 @@
 import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
 import { StateList } from '@/components/admin/states/StateList'
-import { Pagination } from '@/components/ui/pagination'
 
 export const metadata = {
   title: 'State 관리',
@@ -9,21 +8,12 @@ export const metadata = {
 }
 
 // ISR: 30초 캐싱, 데이터 변경 시 자동 revalidate
+// searchParams 제거로 Static/ISR 가능!
 export const revalidate = 30
 
-const DEFAULT_PAGE_SIZE = 20
-
-type Props = {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
-}
-
-async function getStates(page: number, pageSize: number) {
-  const skip = (page - 1) * pageSize
-
-  const [states, total] = await Promise.all([
+async function getAllData() {
+  const [states, policies] = await Promise.all([
     prisma.state.findMany({
-      skip,
-      take: pageSize,
       include: {
         policy: {
           select: {
@@ -44,52 +34,30 @@ async function getStates(page: number, pageSize: number) {
         { order: 'asc' },
       ],
     }),
-    prisma.state.count(),
+    prisma.policy.findMany({
+      where: { isActive: true },
+      select: {
+        id: true,
+        name: true,
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    }),
   ])
 
-  return { states, total }
+  return { states, policies }
 }
 
-async function getPolicies() {
-  const policies = await prisma.policy.findMany({
-    where: { isActive: true },
-    select: {
-      id: true,
-      name: true,
-    },
-    orderBy: {
-      name: 'asc',
-    },
-  })
-
-  return policies
-}
-
-export default async function StatesPage({ searchParams }: Props) {
-  const params = await searchParams
-  const page = typeof params.page === 'string' ? parseInt(params.page, 10) : 1
-  const pageSizeParam = typeof params.pageSize === 'string' ? params.pageSize : String(DEFAULT_PAGE_SIZE)
-  const pageSize = pageSizeParam === 'all' ? 999999 : parseInt(pageSizeParam, 10)
-  
-  const [{ states, total }, policies] = await Promise.all([getStates(page, pageSize), getPolicies()])
-  const totalPages = Math.ceil(total / pageSize)
+export default async function StatesPage() {
+  const { states, policies } = await getAllData()
 
   return (
     <div className="admin-page-container">
-      <div className="admin-list-wrapper">
+      <div className="flex-1 min-h-0">
         <Suspense fallback={<div>로딩 중...</div>}>
           <StateList initialStates={states} availablePolicies={policies} />
         </Suspense>
-      </div>
-
-      <div className="admin-table-spacing">
-        <Pagination
-          currentPage={page}
-          totalPages={totalPages}
-          totalCount={total}
-          pageSize={pageSize}
-          baseUrl="/admin/states"
-        />
       </div>
     </div>
   )

@@ -1,7 +1,6 @@
 import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
 import { RoleList } from '@/components/admin/roles/RoleList'
-import { Pagination } from '@/components/ui/pagination'
 
 export const metadata = {
   title: 'Role 관리',
@@ -9,64 +8,36 @@ export const metadata = {
 }
 
 // ISR: 60초 캐싱, 데이터 변경 시 자동 revalidate
+// searchParams 제거로 Static/ISR 가능!
 export const revalidate = 60
 
-const DEFAULT_PAGE_SIZE = 20
-
-type Props = {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
-}
-
-async function getRoles(page: number, pageSize: number) {
-  const skip = (page - 1) * pageSize
-
-  const [roles, total] = await Promise.all([
-    prisma.role.findMany({
-      skip,
-      take: pageSize,
-      include: {
-        _count: {
-          select: {
-            permissions: true,
-            userRoles: true,
-          },
+async function getAllRoles() {
+  const roles = await prisma.role.findMany({
+    include: {
+      _count: {
+        select: {
+          permissions: true,
+          userRoles: true,
         },
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    }),
-    prisma.role.count(),
-  ])
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  })
 
-  return { roles, total }
+  return roles
 }
 
-export default async function RolesPage({ searchParams }: Props) {
-  const params = await searchParams
-  const page = typeof params.page === 'string' ? parseInt(params.page, 10) : 1
-  const pageSizeParam = typeof params.pageSize === 'string' ? params.pageSize : String(DEFAULT_PAGE_SIZE)
-  const pageSize = pageSizeParam === 'all' ? 999999 : parseInt(pageSizeParam, 10)
-  
-  const { roles, total } = await getRoles(page, pageSize)
-  const totalPages = Math.ceil(total / pageSize)
+export default async function RolesPage() {
+  const roles = await getAllRoles()
 
   return (
     <div className="admin-page-container">
-      <div className="admin-list-wrapper">
+      <div className="flex-1 min-h-0">
         <Suspense fallback={<div>로딩 중...</div>}>
           <RoleList initialRoles={roles} />
         </Suspense>
-      </div>
-
-      <div className="admin-table-spacing">
-        <Pagination
-          currentPage={page}
-          totalPages={totalPages}
-          totalCount={total}
-          pageSize={pageSize}
-          baseUrl="/admin/roles"
-        />
       </div>
     </div>
   )

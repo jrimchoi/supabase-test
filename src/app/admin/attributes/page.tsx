@@ -1,69 +1,40 @@
 import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
 import { AttributeList } from '@/components/admin/attributes/AttributeList'
-import { Pagination } from '@/components/ui/pagination'
 
 export const metadata = { title: 'Attribute 관리' }
 // ISR: 60초 캐싱, 데이터 변경 시 자동 revalidate
+// searchParams 제거로 Static/ISR 가능!
 export const revalidate = 60
 
-const DEFAULT_PAGE_SIZE = 20
-
-type Props = {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
-}
-
-async function getAttributes(page: number, pageSize: number) {
-  const skip = (page - 1) * pageSize
-
-  const [attributes, total] = await Promise.all([
-    prisma.attribute.findMany({
-      skip,
-      take: pageSize,
-      include: {
-        typeAttributes: {
-          include: {
-            type: {
-              select: { id: true, name: true },
-            },
+async function getAllAttributes() {
+  const attributes = await prisma.attribute.findMany({
+    include: {
+      typeAttributes: {
+        include: {
+          type: {
+            select: { id: true, name: true },
           },
         },
       },
-      orderBy: {
-        name: 'asc',
-      },
-    }),
-    prisma.attribute.count(),
-  ])
+    },
+    orderBy: {
+      name: 'asc',
+    },
+  })
 
-  return { attributes, total }
+  return attributes
 }
 
-export default async function AttributesPage({ searchParams }: Props) {
-  const params = await searchParams
-  const page = typeof params.page === 'string' ? parseInt(params.page, 10) : 1
-  const pageSizeParam = typeof params.pageSize === 'string' ? params.pageSize : String(DEFAULT_PAGE_SIZE)
-  const pageSize = pageSizeParam === 'all' ? 999999 : parseInt(pageSizeParam, 10)
-  
-  const { attributes, total } = await getAttributes(page, pageSize)
-  const totalPages = Math.ceil(total / pageSize)
+export default async function AttributesPage() {
+  const attributes = await getAllAttributes()
 
   return (
     <div className="admin-page-container">
-      <div className="admin-list-wrapper">
+      <div className="flex-1 min-h-0">
         <Suspense fallback={<div>로딩 중...</div>}>
           <AttributeList initialAttributes={attributes} />
         </Suspense>
-      </div>
-
-      <div className="admin-table-spacing">
-        <Pagination
-          currentPage={page}
-          totalPages={totalPages}
-          totalCount={total}
-          pageSize={pageSize}
-          baseUrl="/admin/attributes"
-        />
       </div>
     </div>
   )

@@ -1,65 +1,39 @@
 import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
 import { BusinessObjectList } from '@/components/admin/business-objects/BusinessObjectList'
-import { Pagination } from '@/components/ui/pagination'
 
 export const metadata = {
   title: 'BusinessObject 관리',
   description: '비즈니스 객체 인스턴스 관리',
 }
+
 // ISR: 10초 캐싱, 데이터 변경 시 자동 revalidate (자주 변경됨)
+// searchParams 제거로 Static/ISR 가능!
 export const revalidate = 10
 
-const DEFAULT_PAGE_SIZE = 20
+async function getAllBusinessObjects() {
+  // 모든 데이터 가져오기 (클라이언트에서 페이징)
+  const objects = await prisma.businessObject.findMany({
+    include: {
+      type: { select: { id: true, name: true, description: true, prefix: true } },
+      policy: { select: { id: true, name: true, revisionSequence: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+  })
 
-type Props = {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+  return objects
 }
 
-async function getBusinessObjects(page: number, pageSize: number) {
-  const skip = (page - 1) * pageSize
-
-  const [objects, total] = await Promise.all([
-    prisma.businessObject.findMany({
-      skip,
-      take: pageSize,
-      include: {
-        type: { select: { id: true, name: true, description: true, prefix: true } },
-        policy: { select: { id: true, name: true, revisionSequence: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-    }),
-    prisma.businessObject.count(),
-  ])
-
-  return { objects, total }
-}
-
-export default async function BusinessObjectsPage({ searchParams }: Props) {
-  const params = await searchParams
-  const page = typeof params.page === 'string' ? parseInt(params.page, 10) : 1
-  const pageSizeParam = typeof params.pageSize === 'string' ? params.pageSize : String(DEFAULT_PAGE_SIZE)
-  const pageSize = pageSizeParam === 'all' ? 999999 : parseInt(pageSizeParam, 10)
-  
-  const { objects, total } = await getBusinessObjects(page, pageSize)
-  const totalPages = Math.ceil(total / pageSize)
+export default async function BusinessObjectsPage() {
+  const objects = await getAllBusinessObjects()
 
   return (
     <div className="admin-page-container">
-      <div className="admin-list-wrapper">
+      <div className="flex-1 min-h-0">
         <Suspense fallback={<div>로딩 중...</div>}>
+          {/* 클라이언트 컴포넌트에서 페이징 처리 */}
           <BusinessObjectList initialObjects={objects} />
         </Suspense>
-      </div>
-
-      <div className="admin-table-spacing">
-        <Pagination
-          currentPage={page}
-          totalPages={totalPages}
-          totalCount={total}
-          pageSize={pageSize}
-          baseUrl="/admin/business-objects"
-        />
       </div>
     </div>
   )

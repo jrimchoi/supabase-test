@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -15,8 +15,15 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { ScrollableTable } from '@/components/ui/scrollable-table'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { TypeDialog } from './TypeDialog'
-import { PlusCircle, Edit, Trash2, GitBranch } from 'lucide-react'
+import { PlusCircle, Edit, Trash2, GitBranch, ChevronLeft, ChevronRight } from 'lucide-react'
 import { deleteType } from '@/app/admin/types/actions'
 
 type TypeListItem = {
@@ -50,7 +57,23 @@ export function TypeList({
   const [selectedType, setSelectedType] = useState<TypeListItem | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
   const router = useRouter()
+
+  // 페이징 처리 (클라이언트 사이드)
+  const { paginatedTypes, totalPages } = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    const end = start + pageSize
+    const paginated = initialTypes.slice(start, end)
+    const total = Math.ceil(initialTypes.length / pageSize)
+    return { paginatedTypes: paginated, totalPages: total }
+  }, [initialTypes, currentPage, pageSize])
+
+  const handlePageSizeChange = (value: string) => {
+    setPageSize(value === 'all' ? initialTypes.length : parseInt(value, 10))
+    setCurrentPage(1)
+  }
 
   const handleCreate = () => {
     setSelectedType(null)
@@ -85,7 +108,7 @@ export function TypeList({
         <Card>
           <CardContent className="admin-header-card-content">
             <h1 className="text-lg font-bold tracking-tight">Type 관리</h1>
-            <p className="text-sm text-muted-foreground">비즈니스 타입을 생성하고 관리합니다 (계층 구조, 리비전 자동 할당, Attribute 연결)</p>
+            <p className="text-sm text-muted-foreground">비즈니스 타입을 생성하고 관리합니다 (총 {initialTypes.length}개)</p>
             <div className="flex-1" />
             <Button onClick={handleCreate} disabled={isPending}>
               <PlusCircle className="mr-2 h-4 w-4" />
@@ -112,7 +135,7 @@ export function TypeList({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {initialTypes.map((type) => (
+            {paginatedTypes.map((type) => (
               <TableRow key={type.id}>
                 <TableCell>
                   <div className="flex items-center gap-2">
@@ -189,6 +212,51 @@ export function TypeList({
           </TableBody>
         </Table>
       </ScrollableTable>
+
+      {/* 페이징 */}
+      <div className="admin-table-spacing flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">
+          총 {initialTypes.length}개 중 {(currentPage - 1) * pageSize + 1}-
+          {Math.min(currentPage * pageSize, initialTypes.length)}개 표시
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          
+          <span className="text-sm">
+            {currentPage} / {totalPages}
+          </span>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
+          <SelectTrigger className="w-32">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="10">10개씩</SelectItem>
+            <SelectItem value="20">20개씩</SelectItem>
+            <SelectItem value="50">50개씩</SelectItem>
+            <SelectItem value="100">100개씩</SelectItem>
+            <SelectItem value="all">전체</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       <TypeDialog
         type={selectedType}
