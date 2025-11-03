@@ -98,7 +98,8 @@ export async function getDependencies(id: string) {
       success: true,
       data: {
         states: statesCount,
-        types: typesCount + policyTypesCount, // 두 가지 모두 합산
+        policyTypes: policyTypesCount, // PolicyType 연결
+        types: typesCount, // 기본 Policy
         businessObjects: businessObjectsCount,
       },
     }
@@ -113,10 +114,10 @@ export async function getAllTypes() {
     const types = await prisma.type.findMany({
       select: {
         id: true,
-        type: true,
         name: true,
+        description: true,
       },
-      orderBy: { type: 'asc' },
+      orderBy: { name: 'asc' },
     })
 
     return { success: true, data: types }
@@ -135,18 +136,18 @@ export async function searchTypes(query: string) {
     const types = await prisma.type.findMany({
       where: {
         OR: [
-          { type: { contains: query, mode: 'insensitive' } },
           { name: { contains: query, mode: 'insensitive' } },
+          { description: { contains: query, mode: 'insensitive' } },
         ],
       },
       select: {
         id: true,
-        type: true,
         name: true,
+        description: true,
         prefix: true,
       },
       take: 20,
-      orderBy: { type: 'asc' },
+      orderBy: { name: 'asc' },
     })
 
     return { success: true, data: types }

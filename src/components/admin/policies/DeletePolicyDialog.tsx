@@ -36,6 +36,7 @@ export function DeletePolicyDialog({ policy, open, onOpenChange, onSuccess }: Pr
   const [dependencies, setDependencies] = useState<{
     states: number
     policyTypes: number
+    types: number
     businessObjects: number
   } | null>(null)
 
@@ -82,6 +83,7 @@ export function DeletePolicyDialog({ policy, open, onOpenChange, onSuccess }: Pr
   const hasDependencies =
     (dependencies?.states || 0) > 0 ||
     (dependencies?.policyTypes || 0) > 0 ||
+    (dependencies?.types || 0) > 0 ||
     (dependencies?.businessObjects || 0) > 0
 
   return (
@@ -110,7 +112,10 @@ export function DeletePolicyDialog({ policy, open, onOpenChange, onSuccess }: Pr
                     <li>State: {dependencies?.states}개 → 삭제 필요</li>
                   )}
                   {(dependencies?.policyTypes || 0) > 0 && (
-                    <li>Type: {dependencies?.policyTypes}개 → 삭제 또는 다른 Policy로 변경</li>
+                    <li>PolicyType 연결: {dependencies?.policyTypes}개 → 제거 필요</li>
+                  )}
+                  {(dependencies?.types || 0) > 0 && (
+                    <li>기본 Policy Type: {dependencies?.types}개 → 삭제 또는 변경 필요</li>
                   )}
                   {(dependencies?.businessObjects || 0) > 0 && (
                     <li>BusinessObject: {dependencies?.businessObjects}개 → 삭제 또는 Type 변경</li>

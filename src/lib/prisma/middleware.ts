@@ -120,7 +120,7 @@ export function createRevisionExtension(prisma: PrismaClient) {
             }
 
             // 5. 수정된 데이터로 query 실행
-            return query({ ...args, data })
+            return query({ ...args, data: data as any })
           }
 
           // typeId가 없으면 원래대로 실행

@@ -33,7 +33,6 @@ type Type = {
   prefix: string | null
   policy: {
     name: string
-    version: number
     revisionSequence: string
   }
   parent: {
@@ -46,7 +45,6 @@ type Type = {
 type Policy = {
   id: string
   name: string
-  version: number
   revisionSequence: string
 }
 

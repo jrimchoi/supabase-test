@@ -14,9 +14,6 @@ export async function GET(
 
     const attribute = await prisma.attribute.findUnique({
       where: { id },
-      include: {
-        ...(include?.includes('type') && { type: true }),
-      },
     })
 
     if (!attribute) {

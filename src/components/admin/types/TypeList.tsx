@@ -19,7 +19,7 @@ import { TypeDialog } from './TypeDialog'
 import { PlusCircle, Edit, Trash2, GitBranch } from 'lucide-react'
 import { deleteType } from '@/app/admin/types/actions'
 
-type Type = {
+type TypeListItem = {
   id: string
   name: string
   description: string | null
@@ -28,7 +28,6 @@ type Type = {
   updatedAt: Date
   policy: {
     name: string
-    version: number
     revisionSequence: string
   }
   parent: {
@@ -46,9 +45,9 @@ type Type = {
 export function TypeList({
   initialTypes,
 }: {
-  initialTypes: Type[]
+  initialTypes: TypeListItem[]
 }) {
-  const [selectedType, setSelectedType] = useState<Type | null>(null)
+  const [selectedType, setSelectedType] = useState<TypeListItem | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
@@ -58,12 +57,12 @@ export function TypeList({
     setIsDialogOpen(true)
   }
 
-  const handleEdit = (type: Type) => {
+  const handleEdit = (type: TypeListItem) => {
     setSelectedType(type)
     setIsDialogOpen(true)
   }
 
-  const handleDelete = async (type: Type) => {
+  const handleDelete = async (type: TypeListItem) => {
     if (!confirm(`"${type.name}" 타입을 삭제하시겠습니까?`)) {
       return
     }

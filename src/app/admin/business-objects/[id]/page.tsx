@@ -30,7 +30,7 @@ async function getBusinessObjectWithDetails(id: string) {
               attribute: {
                 select: {
                   id: true,
-                  key: true,
+                  name: true,
                   label: true,
                   description: true,
                   attrType: true,
@@ -42,7 +42,7 @@ async function getBusinessObjectWithDetails(id: string) {
             },
             orderBy: {
               attribute: {
-                key: 'asc',
+                name: 'asc',
               },
             },
           },
@@ -69,8 +69,8 @@ async function getBusinessObjectWithDetails(id: string) {
   console.log('obj.type?.typeAttributes:', obj.type?.typeAttributes)
   console.log('typeAttributes length:', obj.type?.typeAttributes?.length)
   if (obj.type?.typeAttributes) {
-    obj.type.typeAttributes.forEach((ta, idx) => {
-      console.log(`  [${idx}] ${ta.attribute.label} (${ta.attribute.key}):`, ta.attribute)
+    obj.type.typeAttributes.forEach((ta: any, idx: number) => {
+      console.log(`  [${idx}] ${ta.attribute.label} (${ta.attribute.name}):`, ta.attribute)
     })
   }
   console.log('obj.data:', obj.data)

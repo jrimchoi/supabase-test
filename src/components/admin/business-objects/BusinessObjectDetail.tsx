@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 type Attribute = {
   id: string
-  key: string
+  name: string
   label: string
   description: string | null
   attrType: string
@@ -55,10 +55,9 @@ type BusinessObjectData = {
   updatedAt: Date
   type: {
     id: string
-    type: string
-    name: string | null
-    prefix: string | null
+    name: string
     description: string | null
+    prefix: string | null
     policy: {
       id: string
       name: string
@@ -103,7 +102,7 @@ export function BusinessObjectDetail({
 
   // 속성 값 렌더링 헬퍼
   const renderAttributeInput = (attr: Attribute) => {
-    const value = customData[attr.key] ?? ''
+    const value = customData[attr.name] ?? ''
 
     switch (attr.attrType) {
       case 'STRING':
@@ -111,7 +110,7 @@ export function BusinessObjectDetail({
         return (
           <Input
             value={value}
-            onChange={(e) => handleCustomDataChange(attr.key, e.target.value)}
+            onChange={(e) => handleCustomDataChange(attr.name, e.target.value)}
             placeholder={attr.defaultValue || `${attr.label} 입력`}
             required={attr.isRequired}
           />
@@ -121,7 +120,7 @@ export function BusinessObjectDetail({
           <Input
             type="number"
             value={value}
-            onChange={(e) => handleCustomDataChange(attr.key, e.target.value ? parseInt(e.target.value, 10) : '')}
+            onChange={(e) => handleCustomDataChange(attr.name, e.target.value ? parseInt(e.target.value, 10) : '')}
             placeholder={attr.defaultValue || '0'}
             required={attr.isRequired}
           />
@@ -132,7 +131,7 @@ export function BusinessObjectDetail({
             type="number"
             step="0.01"
             value={value}
-            onChange={(e) => handleCustomDataChange(attr.key, e.target.value ? parseFloat(e.target.value) : '')}
+            onChange={(e) => handleCustomDataChange(attr.name, e.target.value ? parseFloat(e.target.value) : '')}
             placeholder={attr.defaultValue || '0.00'}
             required={attr.isRequired}
           />
@@ -142,7 +141,7 @@ export function BusinessObjectDetail({
           <Input
             type="date"
             value={value}
-            onChange={(e) => handleCustomDataChange(attr.key, e.target.value)}
+            onChange={(e) => handleCustomDataChange(attr.name, e.target.value)}
             required={attr.isRequired}
           />
         )
@@ -150,7 +149,7 @@ export function BusinessObjectDetail({
         return (
           <Select 
             value={String(value)} 
-            onValueChange={(v) => handleCustomDataChange(attr.key, v === 'true')}
+            onValueChange={(v) => handleCustomDataChange(attr.name, v === 'true')}
           >
             <SelectTrigger>
               <SelectValue placeholder="선택" />
@@ -168,9 +167,9 @@ export function BusinessObjectDetail({
             onChange={(e) => {
               try {
                 const parsed = JSON.parse(e.target.value)
-                handleCustomDataChange(attr.key, parsed)
+                handleCustomDataChange(attr.name, parsed)
               } catch {
-                handleCustomDataChange(attr.key, e.target.value)
+                handleCustomDataChange(attr.name, e.target.value)
               }
             }}
             placeholder='{"key": "value"}'
@@ -182,7 +181,7 @@ export function BusinessObjectDetail({
         return (
           <Input
             value={value}
-            onChange={(e) => handleCustomDataChange(attr.key, e.target.value)}
+            onChange={(e) => handleCustomDataChange(attr.name, e.target.value)}
             placeholder={attr.label}
           />
         )
@@ -203,9 +202,9 @@ export function BusinessObjectDetail({
               <div>
                 <Label className="text-xs text-muted-foreground">Type</Label>
                 <div className="mt-1">
-                  <div className="font-medium text-sm">{object.type.type}</div>
-                  {object.type.name && (
-                    <div className="text-xs text-muted-foreground">{object.type.name}</div>
+                  <div className="font-medium text-sm">{object.type.name}</div>
+                  {object.type.description && (
+                    <div className="text-xs text-muted-foreground">{object.type.description}</div>
                   )}
                 </div>
               </div>
@@ -332,7 +331,7 @@ export function BusinessObjectDetail({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {object.type.typeAttributes.map((ta) => (
                   <div key={ta.id} className="grid gap-2">
-                    <Label htmlFor={ta.attribute.key}>
+                    <Label htmlFor={ta.attribute.name}>
                       {ta.attribute.label}
                       {ta.attribute.isRequired && <span className="text-destructive ml-1">*</span>}
                     </Label>
@@ -347,7 +346,7 @@ export function BusinessObjectDetail({
                         {ta.attribute.attrType}
                       </Badge>
                       <span className="text-xs text-muted-foreground font-mono">
-                        {ta.attribute.key}
+                        {ta.attribute.name}
                       </span>
                     </div>
                   </div>

@@ -50,8 +50,8 @@ export function AttributeDialog({ attribute, open, onOpenChange, onSuccess }: an
     startTransition(async () => {
       try {
         const result = attribute
-          ? await updateAttribute(attribute.id, { name, label, description, attrType, isRequired })
-          : await createAttribute({ name, label, description, attrType, isRequired })
+          ? await updateAttribute(attribute.id, { name, label, description, attrType: attrType as any, isRequired })
+          : await createAttribute({ name, label, description, attrType: attrType as any, isRequired })
         if (!result.success) throw new Error(result.error || '저장 실패')
         onSuccess()
       } catch (error) {

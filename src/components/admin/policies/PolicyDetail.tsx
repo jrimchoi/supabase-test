@@ -10,10 +10,9 @@ import { useRouter } from 'next/navigation'
 
 type TypeData = {
   id: string
-  type: string
-  name: string | null
-  prefix: string | null
+  name: string
   description: string | null
+  prefix: string | null
 }
 
 type PolicyData = {

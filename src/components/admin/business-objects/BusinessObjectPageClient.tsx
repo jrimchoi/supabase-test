@@ -24,10 +24,9 @@ type BusinessObjectData = {
   updatedAt: Date
   type: {
     id: string
-    type: string
-    name: string | null
-    prefix: string | null
+    name: string
     description: string | null
+    prefix: string | null
     policy: {
       id: string
       name: string
@@ -36,7 +35,7 @@ type BusinessObjectData = {
       id: string
       attribute: {
         id: string
-        key: string
+        name: string
         label: string
         description: string | null
         attrType: string
@@ -134,7 +133,7 @@ export function BusinessObjectPageClient({ objectData }: { objectData: BusinessO
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">Type:</span>
                     <Badge variant="outline" className="text-sm">
-                      {objectData.type.name || objectData.type.type}
+                      {objectData.type.description || objectData.type.name}
                     </Badge>
                   </div>
                 )}

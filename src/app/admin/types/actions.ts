@@ -77,6 +77,23 @@ export async function deleteType(id: string) {
   }
 }
 
+export async function getTypeDependencies(id: string) {
+  try {
+    const [attributes, instances] = await Promise.all([
+      prisma.typeAttribute.count({ where: { typeId: id } }),
+      prisma.businessObject.count({ where: { typeId: id } }),
+    ])
+    
+    return {
+      success: true,
+      data: { attributes, instances }
+    }
+  } catch (error) {
+    console.error('Type 종속성 조회 에러:', error)
+    return { success: false, error: '조회 실패' }
+  }
+}
+
 export async function getAllPolicies() {
   try {
     const policies = await prisma.policy.findMany({
@@ -84,12 +101,11 @@ export async function getAllPolicies() {
       select: {
         id: true,
         name: true,
-        version: true,
         revisionSequence: true,
       },
       orderBy: [
         { name: 'asc' },
-        { version: 'desc' },
+        { createdAt: 'desc' },
       ],
     })
 

@@ -17,14 +17,14 @@ export async function GET(request: NextRequest) {
       const allPolicies = await prisma.policy.findMany({
         where: onlyActive ? { isActive: true } : undefined,
         include: include === 'states' ? { states: true } : undefined,
-        orderBy: [{ name: 'asc' }, { version: 'desc' }],
+        orderBy: [{ name: 'asc' }, { createdAt: 'desc' }],
       })
 
-      // 각 name별로 가장 높은 version만 선택
+      // 각 name별로 가장 최근 생성된 것만 선택
       const latestPolicies = new Map()
       allPolicies.forEach(policy => {
         if (!latestPolicies.has(policy.name) || 
-            latestPolicies.get(policy.name).version < policy.version) {
+            latestPolicies.get(policy.name).createdAt < policy.createdAt) {
           latestPolicies.set(policy.name, policy)
         }
       })
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       policies = await prisma.policy.findMany({
         where: onlyActive ? { isActive: true } : undefined,
         include: include === 'states' ? { states: true } : undefined,
-        orderBy: [{ name: 'asc' }, { version: 'desc' }],
+        orderBy: [{ name: 'asc' }, { createdAt: 'desc' }],
       })
     }
 
@@ -61,33 +61,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    let version = 1
-
-    // newVersion=true면 기존 Policy의 새 버전 생성
-    if (newVersion) {
-      // 같은 이름의 Policy 중 최대 버전 찾기
-      const latestPolicy = await prisma.policy.findFirst({
-        where: { name },
-        orderBy: { version: 'desc' },
-        select: { version: true },
-      })
-
-      if (latestPolicy) {
-        version = latestPolicy.version + 1
-        
-        // 기존 버전들을 비활성화 (선택사항)
-        await prisma.policy.updateMany({
-          where: { name, version: { lt: version } },
-          data: { isActive: false },
-        })
-      }
-    }
+    // version 필드가 제거되었으므로 버전 관리는 name에 포함
+    // (예: "송장 관리 정책 v1", "송장 관리 정책 v2")
+    // newVersion 플래그는 무시됨
 
     const policy = await prisma.policy.create({
       data: {
         name,
         description,
-        version,
         isActive: isActive ?? true,
         createdBy,
       },

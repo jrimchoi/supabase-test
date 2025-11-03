@@ -32,10 +32,9 @@ export function AttributeQuickAdd({ typeId, onSuccess }: Props) {
     startTransition(async () => {
       try {
         const result = await createAttribute({
-          typeId,
           name,
           label,
-          attrType,
+          attrType: attrType as any,
           isRequired,
           defaultValue: defaultValue || null,
           validation: validation || null,

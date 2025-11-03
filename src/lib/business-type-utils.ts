@@ -79,7 +79,7 @@ export async function getTypeHierarchy(typeId: string): Promise<string[]> {
   let currentId: string | null = typeId
 
   while (currentId) {
-    const type = await prisma.type.findUnique({
+    const typeData: { name: string; parentId: string | null } | null = await prisma.type.findUnique({
       where: { id: currentId },
       select: {
         name: true,
@@ -87,10 +87,10 @@ export async function getTypeHierarchy(typeId: string): Promise<string[]> {
       },
     })
 
-    if (!type) break
+    if (!typeData) break
 
-    hierarchy.unshift(type.name) // 앞에 추가 (루트 → 현재)
-    currentId = type.parentId
+    hierarchy.unshift(typeData.name) // 앞에 추가 (루트 → 현재)
+    currentId = typeData.parentId
   }
 
   return hierarchy

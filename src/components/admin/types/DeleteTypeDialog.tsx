@@ -16,7 +16,7 @@ export function DeleteTypeDialog({ type, open, onOpenChange, onSuccess }: Props)
 
   useEffect(() => {
     if (type && open) {
-      getTypeDependencies(type.id).then((result) => {
+      getTypeDependencies(type.id).then((result: any) => {
         if (result.success && result.data) setDependencies(result.data)
       })
     }

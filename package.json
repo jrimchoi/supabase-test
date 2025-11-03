@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "tsc --noEmit --watch",
     "test": "jest",
     "test:unit": "jest --testPathPattern=__tests__/api",
     "test:integration": "NODE_TLS_REJECT_UNAUTHORIZED=0 jest --config jest.integration.config.js || echo '\n⚠️  통합 테스트 스킵 (SSL 인증서 문제)'",

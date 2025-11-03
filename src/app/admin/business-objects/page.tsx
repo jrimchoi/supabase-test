@@ -24,8 +24,7 @@ async function getBusinessObjects(page: number, pageSize: number) {
       skip,
       take: pageSize,
       include: {
-        type: { select: { id: true, name: true } },
-        type: { select: { id: true, type: true, name: true, prefix: true } },
+        type: { select: { id: true, name: true, description: true, prefix: true } },
         policy: { select: { id: true, name: true, revisionSequence: true } },
       },
       orderBy: { createdAt: 'desc' },
