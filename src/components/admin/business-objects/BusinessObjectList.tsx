@@ -48,8 +48,17 @@ export function BusinessObjectList({
 }: {
   initialObjects: BusinessObject[]
 }) {
-  // 페이징 훅 사용
-  const pagination = useClientPagination(initialObjects, { initialPageSize: 20 })
+  // 렌더링 성능 측정
+  if (typeof window !== 'undefined') {
+    const renderStart = performance.now()
+    setTimeout(() => {
+      const renderTime = performance.now() - renderStart
+      console.log(`🎨 [BusinessObjectList] Render: ${renderTime.toFixed(2)}ms`)
+    }, 0)
+  }
+
+  // 페이징 훅 사용 (초기 10개로 빠른 렌더링)
+  const pagination = useClientPagination(initialObjects, { initialPageSize: 10 })
 
   return (
     <div className="flex flex-col h-full mt-2.5">
