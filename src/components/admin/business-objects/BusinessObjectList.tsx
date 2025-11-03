@@ -27,7 +27,7 @@ type BusinessObject = {
   owner: string | null
   createdBy: string | null
   updatedBy: string | null
-  data: unknown
+  // data 필드 제거 (목록에서는 불필요, 상세 페이지에서만 사용)
   createdAt: Date
   updatedAt: Date
   type: {
@@ -75,14 +75,13 @@ export function BusinessObjectList({
               <TableHead className="w-48">Policy</TableHead>
               <TableHead className="w-32">State</TableHead>
               <TableHead className="w-32">Owner</TableHead>
-              <TableHead className="w-32">Data 필드</TableHead>
               <TableHead className="w-40">생성일</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {pagination.paginatedData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   등록된 BusinessObject가 없습니다
                 </TableCell>
               </TableRow>
@@ -133,12 +132,6 @@ export function BusinessObjectList({
                   </TableCell>
                   <TableCell className="text-xs font-mono text-muted-foreground">
                     {obj.owner ? obj.owner.substring(0, 8) + '...' : '-'}
-                  </TableCell>
-                  <TableCell className="text-center text-xs text-muted-foreground">
-                    {obj.data && typeof obj.data === 'object' 
-                      ? `${Object.keys(obj.data).length}개 속성`
-                      : '-'
-                    }
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     {format(new Date(obj.createdAt), 'yyyy-MM-dd HH:mm', { locale: ko })}

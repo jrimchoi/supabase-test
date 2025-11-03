@@ -12,10 +12,13 @@ export const metadata = {
 export const revalidate = 10
 
 async function getAllBusinessObjects() {
-  // 최근 200개만 가져오기 (성능 최적화)
-  // 더 많은 데이터가 필요하면 limit을 늘리세요
+  // 성능 측정 시작
+  const startTime = performance.now()
+  
+  // 최근 50개만 가져오기 (성능 최적화)
+  // data 필드 제거 (목록에서는 불필요, 상세 페이지에서만 사용)
   const objects = await prisma.businessObject.findMany({
-    take: 200,  // 최근 200개로 제한
+    take: 50,  // 50개로 제한 (빠른 로딩)
     select: {
       id: true,
       typeId: true,
@@ -27,7 +30,7 @@ async function getAllBusinessObjects() {
       owner: true,
       createdBy: true,
       updatedBy: true,
-      data: true,
+      // data: true,  // ← 제거! (목록에서는 불필요)
       createdAt: true,
       updatedAt: true,
       type: { select: { id: true, name: true, description: true, prefix: true } },
@@ -35,6 +38,12 @@ async function getAllBusinessObjects() {
     },
     orderBy: { createdAt: 'desc' },
   })
+
+  // 성능 측정 종료
+  const duration = performance.now() - startTime
+  
+  // 항상 로그 (성능 모니터링)
+  console.log(`🔍 [BusinessObjects] Query: ${duration.toFixed(2)}ms | Items: ${objects.length} | Avg: ${(duration / Math.max(objects.length, 1)).toFixed(2)}ms/item`)
 
   return objects
 }
