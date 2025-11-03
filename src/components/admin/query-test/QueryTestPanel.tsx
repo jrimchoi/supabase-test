@@ -18,7 +18,7 @@ type QueryResult = {
   success: boolean
   queryName: string
   sql: string
-  connectionType: string
+  connectionType?: string
   executionTime: number
   serverExecutionTime: number
   resultCount: number
@@ -304,13 +304,15 @@ export function QueryTestPanel() {
                 <p className="text-sm text-muted-foreground">{result.queryName}</p>
               </div>
 
-              <div>
-                <p className="text-sm font-medium mb-1">Connection Type</p>
-                <Badge variant="outline" className="font-mono">
-                  {CONNECTION_TYPES.find((t) => t.value === result.connectionType)?.label ||
-                    result.connectionType}
-                </Badge>
-              </div>
+              {result.connectionType && (
+                <div>
+                  <p className="text-sm font-medium mb-1">Connection Type</p>
+                  <Badge variant="outline" className="font-mono">
+                    {CONNECTION_TYPES.find((t) => t.value === result.connectionType)?.label ||
+                      result.connectionType}
+                  </Badge>
+                </div>
+              )}
 
               {result.sql && (
                 <div>
