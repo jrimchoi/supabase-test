@@ -12,8 +12,14 @@ export const metadata = {
 export const revalidate = 10
 
 async function getAllBusinessObjects() {
-  // 성능 측정 시작
-  const startTime = performance.now()
+  const pageStartTime = performance.now()
+  
+  console.log('📊 [BusinessObjects Page] 시작')
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  
+  // DB 쿼리 성능 측정
+  const queryStartTime = performance.now()
+  console.log('🔍 [DB Query] 시작...')
   
   // 최근 50개만 가져오기 (성능 최적화)
   // data 필드 제거 (목록에서는 불필요, 상세 페이지에서만 사용)
@@ -38,12 +44,20 @@ async function getAllBusinessObjects() {
     },
     orderBy: { createdAt: 'desc' },
   })
-
-  // 성능 측정 종료
-  const duration = performance.now() - startTime
   
-  // 항상 로그 (성능 모니터링)
-  console.log(`🔍 [BusinessObjects] Query: ${duration.toFixed(2)}ms | Items: ${objects.length} | Avg: ${(duration / Math.max(objects.length, 1)).toFixed(2)}ms/item`)
+  const queryDuration = performance.now() - queryStartTime
+  console.log(`✅ [DB Query] 완료: ${queryDuration.toFixed(2)}ms`)
+  console.log(`   - 조회 개수: ${objects.length}개`)
+  console.log(`   - 평균: ${(queryDuration / Math.max(objects.length, 1)).toFixed(2)}ms/item`)
+  
+  // 데이터 크기 측정
+  const dataSize = JSON.stringify(objects).length
+  console.log(`📦 [Data Size] ${(dataSize / 1024).toFixed(2)} KB`)
+  
+  // 전체 페이지 로딩 시간
+  const totalDuration = performance.now() - pageStartTime
+  console.log(`⏱️  [Total] ${totalDuration.toFixed(2)}ms`)
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
 
   return objects
 }
