@@ -165,8 +165,8 @@ export async function getPolicyTypes(policyId: string) {
         type: {
           select: {
             id: true,
-            type: true,
             name: true,
+            description: true,
           },
         },
       },

@@ -19,7 +19,6 @@ async function getPolicyWithDetails(id: string) {
           type: {
             select: {
               id: true,
-              type: true,
               name: true,
               prefix: true,
               description: true,
