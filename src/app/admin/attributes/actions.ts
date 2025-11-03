@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 
 export async function createAttribute(data: {
-  key: string
+  name: string
   label: string
   description?: string | null
   attrType: string

@@ -30,7 +30,7 @@ async function getAttributes(page: number, pageSize: number) {
         },
       },
       orderBy: {
-        key: 'asc',
+        name: 'asc',
       },
     }),
     prisma.attribute.count(),

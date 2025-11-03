@@ -4,20 +4,18 @@ import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 
 export async function createType(data: {
-  type: string
-  name?: string
-  prefix?: string
+  name: string
   description?: string
+  prefix?: string
   policyId: string
   parentId?: string | null
 }) {
   try {
     const newType = await prisma.type.create({
       data: {
-        type: data.type,
-        name: data.name || null,
-        prefix: data.prefix || null,
+        name: data.name,
         description: data.description || null,
+        prefix: data.prefix || null,
         policyId: data.policyId,
         parentId: data.parentId || null,
       },
@@ -29,7 +27,7 @@ export async function createType(data: {
     console.error('Type 생성 에러:', error)
     
     if (error instanceof Error && error.message.includes('Unique constraint')) {
-      return { success: false, error: '이미 존재하는 type입니다.' }
+      return { success: false, error: '이미 존재하는 name입니다.' }
     }
     
     return { success: false, error: '생성 실패' }
@@ -39,10 +37,9 @@ export async function createType(data: {
 export async function updateType(
   id: string,
   data: {
-    type?: string
-    name?: string | null
-    prefix?: string | null
+    name?: string
     description?: string | null
+    prefix?: string | null
     policyId?: string
     parentId?: string | null
   }
@@ -108,11 +105,11 @@ export async function getAllTypes() {
     const types = await prisma.type.findMany({
       select: {
         id: true,
-        type: true,
         name: true,
+        description: true,
         prefix: true,
       },
-      orderBy: { type: 'asc' },
+      orderBy: { name: 'asc' },
     })
 
     return { success: true, data: types }

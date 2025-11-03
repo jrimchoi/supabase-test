@@ -35,7 +35,7 @@ async function getTypeWithDetails(id: string) {
           attribute: {
             select: {
               id: true,
-              key: true,
+              name: true,
               label: true,
               description: true,
               attrType: true,
@@ -47,7 +47,7 @@ async function getTypeWithDetails(id: string) {
         },
         orderBy: {
           attribute: {
-            key: 'asc',
+            name: 'asc',
           },
         },
       },
@@ -79,7 +79,7 @@ export default async function TypeDetailPage({ params }: Params) {
           <Card>
             <CardContent className="admin-header-card-content">
               <h1 className="text-lg font-bold tracking-tight">Type 상세</h1>
-              <p className="text-sm text-muted-foreground">{typeData.name || typeData.type}</p>
+              <p className="text-sm text-muted-foreground">{typeData.description || typeData.name}</p>
               <div className="flex-1" />
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">Policy:</span>

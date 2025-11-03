@@ -35,8 +35,8 @@ async function getTypes(page: number, pageSize: number) {
         parent: {
           select: {
             id: true,
-            type: true,
             name: true,
+            description: true,
           },
         },
         _count: {
@@ -48,7 +48,7 @@ async function getTypes(page: number, pageSize: number) {
         },
       },
       orderBy: [
-        { type: 'asc' },
+        { name: 'asc' },
       ],
     }),
     prisma.type.count(),
