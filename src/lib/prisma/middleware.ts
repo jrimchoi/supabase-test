@@ -35,7 +35,7 @@ export function createRevisionExtension(prisma: PrismaClient) {
                 id: true,
                 name: true,
                 description: true,
-                prefix: true,
+                prefix: true, 
                 policyId: true,
                 policy: {
                   select: {
