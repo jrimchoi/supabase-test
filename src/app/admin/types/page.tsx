@@ -8,9 +8,8 @@ export const metadata = {
   description: '비즈니스 타입 관리 페이지 (계층 구조, 리비전 시스템, Attribute 연결)',
 }
 
-// 캐싱 비활성화
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+// ISR: 60초 캐싱, 데이터 변경 시 자동 revalidate
+export const revalidate = 60
 
 const DEFAULT_PAGE_SIZE = 20
 

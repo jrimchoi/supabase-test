@@ -8,8 +8,8 @@ export const metadata = {
   description: 'State 간 전이 관계를 정의합니다',
 }
 
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+// ISR: 30초 캐싱, 데이터 변경 시 자동 revalidate
+export const revalidate = 30
 
 async function getTransitions() {
   const transitions = await prisma.stateTransition.findMany({

@@ -5,8 +5,8 @@ import { notFound } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+// ISR: 30초 캐싱, 데이터 변경 시 자동 revalidate
+export const revalidate = 30
 
 type Params = { params: Promise<{ id: string }> }
 

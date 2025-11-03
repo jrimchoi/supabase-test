@@ -287,6 +287,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 >
                   <Link
                     href={item.href}
+                    prefetch={true}
                     onClick={() => {
                       if (isMobile) {
                         setSidebarOpen(false)
@@ -351,6 +352,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                     <Link
                       key={item.href}
                       href={item.href}
+                      prefetch={true}
                       onClick={() => {
                         if (isMobile) {
                           setSidebarOpen(false)
@@ -389,6 +391,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                     >
                       <Link
                         href={item.href}
+                        prefetch={true}
                         onClick={() => {
                           if (isMobile) {
                             setSidebarOpen(false)

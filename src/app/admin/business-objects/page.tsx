@@ -7,8 +7,8 @@ export const metadata = {
   title: 'BusinessObject 관리',
   description: '비즈니스 객체 인스턴스 관리',
 }
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+// ISR: 10초 캐싱, 데이터 변경 시 자동 revalidate (자주 변경됨)
+export const revalidate = 10
 
 const DEFAULT_PAGE_SIZE = 20
 

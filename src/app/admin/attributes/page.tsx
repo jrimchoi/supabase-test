@@ -4,8 +4,8 @@ import { AttributeList } from '@/components/admin/attributes/AttributeList'
 import { Pagination } from '@/components/ui/pagination'
 
 export const metadata = { title: 'Attribute 관리' }
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+// ISR: 60초 캐싱, 데이터 변경 시 자동 revalidate
+export const revalidate = 60
 
 const DEFAULT_PAGE_SIZE = 20
 

@@ -8,8 +8,8 @@ export const metadata = {
   description: 'State별 권한을 정의합니다',
 }
 
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+// ISR: 30초 캐싱, 데이터 변경 시 자동 revalidate
+export const revalidate = 30
 
 async function getPermissions() {
   const permissions = await prisma.permission.findMany({

@@ -17,8 +17,8 @@ export const metadata = {
   description: 'Policy 관리 시스템 대시보드',
 }
 
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+// ISR: 10초 캐싱 (Dashboard 통계는 실시간성 필요)
+export const revalidate = 10
 
 async function getStats() {
   const [

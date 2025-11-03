@@ -3,8 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { BusinessObjectPageClient } from '@/components/admin/business-objects/BusinessObjectPageClient'
 import { notFound } from 'next/navigation'
 
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+// ISR: 10초 캐싱, 데이터 변경 시 자동 revalidate
+export const revalidate = 10
 
 type Params = { params: Promise<{ id: string }> }
 

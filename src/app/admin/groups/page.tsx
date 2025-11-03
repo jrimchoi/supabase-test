@@ -8,8 +8,8 @@ export const metadata = {
   description: '그룹 관리 페이지',
 }
 
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+// ISR: 60초 캐싱, 데이터 변경 시 자동 revalidate
+export const revalidate = 60
 
 const DEFAULT_PAGE_SIZE = 20
 

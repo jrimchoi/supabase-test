@@ -8,9 +8,8 @@ export const metadata = {
   description: '역할 관리 페이지',
 }
 
-// 캐싱 비활성화 (실시간 데이터 갱신)
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+// ISR: 60초 캐싱, 데이터 변경 시 자동 revalidate
+export const revalidate = 60
 
 const DEFAULT_PAGE_SIZE = 20
 
