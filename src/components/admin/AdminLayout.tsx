@@ -27,6 +27,7 @@ import {
   HelpCircle,
   ChevronDown,
   ChevronRight,
+  Database,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -125,6 +126,12 @@ const navItems: NavItem[] = [
 ]
 
 const helpItems: NavItem[] = [
+  {
+    title: 'Query Test',
+    href: '/admin/query-test',
+    icon: Database,
+    description: 'DB 쿼리 성능 테스트',
+  },
   {
     title: 'Design Template',
     href: '/admin/design-template',

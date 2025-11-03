@@ -18,23 +18,17 @@ import { ko } from 'date-fns/locale'
 
 type BusinessObject = {
   id: string
-  typeId: string | null
   name: string | null
   revision: string | null
-  policyId: string
   currentState: string
   description: string | null
   owner: string | null
-  createdBy: string | null
-  updatedBy: string | null
-  // data 필드 제거 (목록에서는 불필요, 상세 페이지에서만 사용)
   createdAt: Date
   updatedAt: Date
   type: {
     id: string
     name: string
     description: string | null
-    prefix: string | null
   } | null
   policy: {
     id: string
