@@ -2,12 +2,13 @@
 
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
+import { AttrType } from '@prisma/client'
 
 export async function createAttribute(data: {
   name: string
   label: string
   description?: string | null
-  attrType: string
+  attrType: AttrType
   isRequired: boolean
   defaultValue?: string | null
   validation?: string | null
