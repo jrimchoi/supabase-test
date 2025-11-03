@@ -30,10 +30,8 @@ function SignInContent() {
 		setLoading(true);
 		setMessage(null);
 		try {
-			const origin =
-				typeof globalThis !== "undefined" && globalThis.window
-					? globalThis.window.location.origin
-					: process.env.NEXT_PUBLIC_SITE_URL;
+			// 항상 현재 브라우저의 origin 사용 (클라이언트 컴포넌트이므로 가능)
+			const origin = window.location.origin;
 			
 			// redirectTo를 callback URL에 query parameter로 전달
 			const callbackUrl = `${origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`;
@@ -58,7 +56,7 @@ function SignInContent() {
 		setLoading(true);
 		setMessage(null);
 		try {
-			const emailRedirectTo = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`;
+			const emailRedirectTo = `${window.location.origin}/auth/callback`;
 			const { error } = await supabase.auth.signInWithOtp({
 				email,
 				options: { emailRedirectTo },
@@ -101,7 +99,7 @@ function SignInContent() {
 				email,
 				password,
 				options: {
-					emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+					emailRedirectTo: `${window.location.origin}/auth/callback`,
 				},
 			});
 			if (error) throw error;

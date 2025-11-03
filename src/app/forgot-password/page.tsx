@@ -19,7 +19,7 @@ export default function ForgotPasswordPage() {
 		setMessage(null);
 		try {
 			const { error } = await supabase.auth.resetPasswordForEmail(email, {
-				redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+				redirectTo: `${window.location.origin}/auth/callback`,
 			});
 			if (error) throw error;
 			setMessage("비밀번호 재설정 링크가 이메일로 전송되었습니다.");

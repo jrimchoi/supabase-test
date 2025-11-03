@@ -119,31 +119,31 @@ export default async function AdminDashboard() {
   ]
 
   return (
-    <div className="space-y-8">
+    <div className="h-full overflow-y-auto px-6 py-4 space-y-4">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-muted-foreground mt-1 text-sm">
           Policy 기반 권한 관리 시스템 개요
         </p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat) => {
           const Icon = stat.icon
           return (
             <a key={stat.title} href={stat.href}>
               <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 pt-4">
                   <CardTitle className="text-sm font-medium">
                     {stat.title}
                   </CardTitle>
                   <Icon className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pb-4">
                   <div className="text-2xl font-bold">{stat.value}</div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground mt-1">
                     {stat.description}
                   </p>
                 </CardContent>
@@ -154,27 +154,27 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle className="text-base">빠른 시작</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-2 pt-0">
             <a
               href="/admin/policies"
-              className="block p-3 rounded-lg border hover:bg-accent transition-colors"
+              className="block p-2.5 rounded-lg border hover:bg-accent transition-colors"
             >
-              <div className="font-medium">새 Policy 생성</div>
-              <div className="text-sm text-muted-foreground">
+              <div className="font-medium text-sm">새 Policy 생성</div>
+              <div className="text-xs text-muted-foreground">
                 권한 정책을 생성하고 관리합니다
               </div>
             </a>
             <a
               href="/admin/roles"
-              className="block p-3 rounded-lg border hover:bg-accent transition-colors"
+              className="block p-2.5 rounded-lg border hover:bg-accent transition-colors"
             >
-              <div className="font-medium">Role 관리</div>
-              <div className="text-sm text-muted-foreground">
+              <div className="font-medium text-sm">Role 관리</div>
+              <div className="text-xs text-muted-foreground">
                 사용자 역할을 정의합니다
               </div>
             </a>
@@ -182,25 +182,25 @@ export default async function AdminDashboard() {
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle className="text-base">EAV 패턴</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-2 pt-0">
             <a
               href="/admin/types"
-              className="block p-3 rounded-lg border hover:bg-accent transition-colors"
+              className="block p-2.5 rounded-lg border hover:bg-accent transition-colors"
             >
-              <div className="font-medium">Type 정의</div>
-              <div className="text-sm text-muted-foreground">
+              <div className="font-medium text-sm">Type 정의</div>
+              <div className="text-xs text-muted-foreground">
                 Invoice, Contract 등 비즈니스 타입
               </div>
             </a>
             <a
               href="/admin/attributes"
-              className="block p-3 rounded-lg border hover:bg-accent transition-colors"
+              className="block p-2.5 rounded-lg border hover:bg-accent transition-colors"
             >
-              <div className="font-medium">Attribute 정의</div>
-              <div className="text-sm text-muted-foreground">
+              <div className="font-medium text-sm">Attribute 정의</div>
+              <div className="text-xs text-muted-foreground">
                 Type별 속성 스키마
               </div>
             </a>
@@ -208,21 +208,21 @@ export default async function AdminDashboard() {
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle className="text-base">시스템 정보</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex justify-between items-center p-2">
-              <span className="text-sm text-muted-foreground">버전</span>
-              <span className="text-sm font-medium">2.0 (EAV)</span>
+          <CardContent className="space-y-1.5 pt-0">
+            <div className="flex justify-between items-center py-1.5">
+              <span className="text-xs text-muted-foreground">버전</span>
+              <span className="text-xs font-medium">2.0 (EAV)</span>
             </div>
-            <div className="flex justify-between items-center p-2">
-              <span className="text-sm text-muted-foreground">데이터베이스</span>
-              <span className="text-sm font-medium">PostgreSQL</span>
+            <div className="flex justify-between items-center py-1.5">
+              <span className="text-xs text-muted-foreground">데이터베이스</span>
+              <span className="text-xs font-medium">PostgreSQL</span>
             </div>
-            <div className="flex justify-between items-center p-2">
-              <span className="text-sm text-muted-foreground">ORM</span>
-              <span className="text-sm font-medium">Prisma</span>
+            <div className="flex justify-between items-center py-1.5">
+              <span className="text-xs text-muted-foreground">ORM</span>
+              <span className="text-xs font-medium">Prisma</span>
             </div>
           </CardContent>
         </Card>
@@ -230,11 +230,11 @@ export default async function AdminDashboard() {
 
       {/* Recent Activity (Placeholder) */}
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-3">
           <CardTitle>최근 활동</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="text-sm text-muted-foreground text-center py-8">
+        <CardContent className="pt-0">
+          <div className="text-sm text-muted-foreground text-center py-4">
             최근 활동 로그가 여기에 표시됩니다
           </div>
         </CardContent>
