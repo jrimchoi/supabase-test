@@ -37,7 +37,8 @@ export async function createNewPolicyVersion(
   }
 
   // 2. 트랜잭션으로 처리
-  return await prisma.$transaction(async (tx) => {
+  // @ts-ignore - Prisma transaction callback type
+  return await prisma.$transaction(async (tx: any) => {
     // 2-1. 이전 버전 비활성화 (옵션)
     if (deactivateOld) {
       await tx.policy.update({
@@ -46,12 +47,12 @@ export async function createNewPolicyVersion(
       })
     }
 
-    // 2-2. 새 버전 생성
+    // 2-2. 새 버전 생성 (version 필드 제거됨, name에 버전 포함)
+    const timestamp = new Date().toISOString().split('T')[0]
     const newPolicy = await tx.policy.create({
       data: {
-        name: currentPolicy.name,
+        name: `${currentPolicy.name} (${timestamp})`,
         description: description || currentPolicy.description,
-        version: currentPolicy.version + 1,
         isActive: true,
         createdBy: currentPolicy.updatedBy || currentPolicy.createdBy,
         updatedBy: currentPolicy.updatedBy,
@@ -60,7 +61,7 @@ export async function createNewPolicyVersion(
 
     // 2-3. States 복사 (옵션)
     if (copyStates && currentPolicy.states) {
-      for (const state of currentPolicy.states) {
+      for (const state of currentPolicy.states as any[]) {
         const newState = await tx.state.create({
           data: {
             policyId: newPolicy.id,
@@ -73,26 +74,28 @@ export async function createNewPolicyVersion(
         })
 
         // 2-4. Permissions 복사
-        for (const permission of state.permissions) {
-          await tx.permission.create({
-            data: {
-              stateId: newState.id,
-              resource: permission.resource,
-              action: permission.action,
-              targetType: permission.targetType,
-              roleId: permission.roleId,
-              groupId: permission.groupId,
-              userId: permission.userId,
-              expression: permission.expression,
-              isAllowed: permission.isAllowed,
-            },
-          })
+        if (state.permissions) {
+          for (const permission of state.permissions as any[]) {
+            await tx.permission.create({
+              data: {
+                stateId: newState.id,
+                resource: permission.resource,
+                action: permission.action,
+                targetType: permission.targetType,
+                roleId: permission.roleId,
+                groupId: permission.groupId,
+                userId: permission.userId,
+                expression: permission.expression,
+                isAllowed: permission.isAllowed,
+              },
+            })
+          }
         }
       }
     }
 
     console.log(
-      `✅ Policy 버전 업: ${currentPolicy.name} v${currentPolicy.version} → v${newPolicy.version} (수동)`
+      `✅ Policy 버전 업: ${currentPolicy.name} → ${newPolicy.name} (수동)`
     )
 
     return newPolicy

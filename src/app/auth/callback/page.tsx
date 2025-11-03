@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getBrowserSupabase } from "@/lib/supabase/client";
 import { logAuth } from "@/lib/logger";
 
 const supabase = getBrowserSupabase();
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
 	const router = useRouter();
 	const search = useSearchParams();
 	const [status, setStatus] = useState("초기화...");
@@ -91,5 +91,13 @@ export default function AuthCallbackPage() {
 
 	return (
 		<div className="p-6 text-sm text-muted-foreground">{status}</div>
+	);
+}
+
+export default function AuthCallbackPage() {
+	return (
+		<Suspense fallback={<div className="p-6 text-sm text-muted-foreground">로딩 중...</div>}>
+			<AuthCallbackContent />
+		</Suspense>
 	);
 }

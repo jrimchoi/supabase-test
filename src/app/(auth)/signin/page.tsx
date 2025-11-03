@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getBrowserSupabase } from "@/lib/supabase/client";
 import { logAuth } from "@/lib/logger";
@@ -17,7 +17,7 @@ import {
 
 const supabase = getBrowserSupabase();
 
-export default function SignInPage() {
+function SignInContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const redirectTo = searchParams.get("redirectTo") || "/admin";
@@ -196,5 +196,17 @@ export default function SignInPage() {
 				</CardContent>
 			</Card>
 		</div>
+	);
+}
+
+export default function SignInPage() {
+	return (
+		<Suspense fallback={
+			<div className="mx-auto flex min-h-[calc(100dvh-120px)] max-w-md items-center justify-center p-6">
+				<div className="text-muted-foreground">로딩 중...</div>
+			</div>
+		}>
+			<SignInContent />
+		</Suspense>
 	);
 }
