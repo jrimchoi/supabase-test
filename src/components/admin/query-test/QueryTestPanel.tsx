@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { PlayCircle, Loader2, Clock, Database, CheckCircle } from 'lucide-react'
+import { PlayCircle, Loader2, Clock, Database, CheckCircle, Zap } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -18,6 +18,7 @@ type QueryResult = {
   success: boolean
   queryName: string
   sql: string
+  connectionType: string
   executionTime: number
   serverExecutionTime: number
   resultCount: number
@@ -25,6 +26,13 @@ type QueryResult = {
   timestamp: string
   error?: string
 }
+
+const CONNECTION_TYPES = [
+  { value: 'default', label: '.env.local (현재 설정)', description: '환경 변수' },
+  { value: 'pooler', label: 'Pooler (싱가포르)', description: '안정적, 느림 (600-900ms)' },
+  { value: 'direct', label: 'Direct (싱가포르)', description: '빠름, IPv6 필요 (100-200ms)' },
+  { value: 'local', label: 'Local Supabase', description: '가장 빠름 (2-10ms)' },
+]
 
 const PRESET_QUERIES = [
   { key: 'businessObjects', name: 'BusinessObject (50개, JOIN 포함)' },
@@ -40,6 +48,7 @@ export function QueryTestPanel() {
   const [selectedQuery, setSelectedQuery] = useState<string>('businessObjects')
   const [customSql, setCustomSql] = useState<string>('')
   const [useCustomSql, setUseCustomSql] = useState(false)
+  const [connectionType, setConnectionType] = useState<string>('default')
   const [isExecuting, setIsExecuting] = useState(false)
   const [result, setResult] = useState<QueryResult | null>(null)
   const [clientTime, setClientTime] = useState<number>(0)
@@ -57,6 +66,7 @@ export function QueryTestPanel() {
         body: JSON.stringify({
           queryKey: useCustomSql ? undefined : selectedQuery,
           customSql: useCustomSql ? customSql : undefined,
+          connectionType,
         }),
       })
 
@@ -118,10 +128,39 @@ export function QueryTestPanel() {
         </CardContent>
       </Card>
 
+      {/* Connection Type 선택 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5" />
+            1. Connection Type 선택
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Select value={connectionType} onValueChange={setConnectionType}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {CONNECTION_TYPES.map((type) => (
+                <SelectItem key={type.value} value={type.value}>
+                  <div className="flex flex-col">
+                    <span className="font-medium">{type.label}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {type.description}
+                    </span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
+
       {/* 쿼리 선택 */}
       <Card>
         <CardHeader>
-          <CardTitle>1. 쿼리 선택</CardTitle>
+          <CardTitle>2. 쿼리 선택</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-4">
@@ -263,6 +302,14 @@ export function QueryTestPanel() {
               <div>
                 <p className="text-sm font-medium mb-1">쿼리 이름</p>
                 <p className="text-sm text-muted-foreground">{result.queryName}</p>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium mb-1">Connection Type</p>
+                <Badge variant="outline" className="font-mono">
+                  {CONNECTION_TYPES.find((t) => t.value === result.connectionType)?.label ||
+                    result.connectionType}
+                </Badge>
               </div>
 
               {result.sql && (

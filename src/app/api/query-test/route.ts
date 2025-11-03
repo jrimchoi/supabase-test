@@ -1,8 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { PrismaClient } from '@prisma/client'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+
+// Connection Type별 DATABASE_URL
+const CONNECTION_URLS = {
+  default: process.env.DATABASE_URL!,
+  pooler: 'postgresql://postgres.ckujlkdumhhtjkinngjf:JFU1hbZtGSvFspnM@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?schema=public',
+  direct: 'postgresql://postgres.ckujlkdumhhtjkinngjf:JFU1hbZtGSvFspnM@db.ckujlkdumhhtjkinngjf.supabase.co:5432/postgres?schema=public',
+  local: 'postgresql://postgres:postgres@localhost:54322/postgres?schema=public',
+}
+
+// Prisma Client 생성 함수
+function createPrismaClient(connectionType: string) {
+  const databaseUrl = CONNECTION_URLS[connectionType as keyof typeof CONNECTION_URLS] || CONNECTION_URLS.default
+  
+  return new PrismaClient({
+    datasources: {
+      db: {
+        url: databaseUrl,
+      },
+    },
+  })
+}
 
 // 허용된 쿼리 목록 (보안)
 const ALLOWED_QUERIES = {
@@ -73,9 +94,11 @@ const ALLOWED_QUERIES = {
 }
 
 export async function POST(request: NextRequest) {
+  let prismaClient: PrismaClient | null = null
+  
   try {
     const body = await request.json()
-    const { queryKey, customSql } = body
+    const { queryKey, customSql, connectionType = 'default' } = body
 
     let sql: string
     let queryName: string
@@ -104,16 +127,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Connection Type에 따라 Prisma Client 생성
+    prismaClient = createPrismaClient(connectionType)
+
     // 성능 측정 시작
     const startTime = performance.now()
     const serverStartTime = Date.now()
 
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     console.log(`🔍 [Query Test] ${queryName}`)
+    console.log(`🔌 [Connection] ${connectionType}`)
     console.log(`📝 [SQL] ${sql.substring(0, 100)}...`)
 
     // 쿼리 실행
-    const result = await prisma.$queryRawUnsafe(sql)
+    const result = await prismaClient.$queryRawUnsafe(sql)
 
     // 성능 측정 종료
     const endTime = performance.now()
@@ -130,6 +157,7 @@ export async function POST(request: NextRequest) {
       success: true,
       queryName,
       sql,
+      connectionType,
       executionTime: parseFloat(executionTime.toFixed(2)),
       serverExecutionTime,
       resultCount: Array.isArray(result) ? result.length : 1,
@@ -146,6 +174,11 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     )
+  } finally {
+    // Prisma Client 연결 종료
+    if (prismaClient) {
+      await prismaClient.$disconnect()
+    }
   }
 }
 
