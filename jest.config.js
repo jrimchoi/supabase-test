@@ -16,7 +16,8 @@ const customJestConfig = {
   ],
   testPathIgnorePatterns: [
     '/node_modules/',
-    '/__tests__/integration/', // 통합 테스트 제외
+    '/.next/',
+    '/__tests__/integration/', // 통합 테스트 제외 (DB 연결 필요)
   ],
   collectCoverageFrom: [
     'src/app/api/**/*.ts',

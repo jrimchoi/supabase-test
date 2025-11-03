@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     const attributes = await prisma.attribute.findMany({
       where: {
         OR: [
-          { key: { contains: query, mode: 'insensitive' } },
+          { name: { contains: query, mode: 'insensitive' } },
           { label: { contains: query, mode: 'insensitive' } },
         ],
         // 현재 Type에 할당되지 않은 것만
@@ -34,7 +34,7 @@ export async function GET(request: Request) {
           ? { id: { notIn: assignedAttributeIds } }
           : {}),
       },
-      orderBy: [{ key: 'asc' }],
+      orderBy: [{ name: 'asc' }],
       take: 20,
     })
 

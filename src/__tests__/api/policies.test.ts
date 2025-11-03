@@ -22,22 +22,24 @@ describe('Policy API', () => {
         {
           id: 'policy-1',
           name: '정책 1',
-          description: '설명 1',
+          revisionSequence: 'A,B,C',
           isActive: true,
           createdAt: new Date(),
           updatedAt: new Date(),
           createdBy: null,
           updatedBy: null,
+          description: null,
         },
         {
           id: 'policy-2',
           name: '정책 2',
-          description: '설명 2',
+          revisionSequence: 'Draft,Review,Final',
           isActive: true,
           createdAt: new Date(),
           updatedAt: new Date(),
           createdBy: null,
           updatedBy: null,
+          description: null,
         },
       ]
 
@@ -65,12 +67,13 @@ describe('Policy API', () => {
         {
           id: 'policy-1',
           name: '정책 1',
-          description: '설명 1',
+          revisionSequence: 'A,B,C',
           isActive: true,
           createdAt: new Date(),
           updatedAt: new Date(),
           createdBy: null,
           updatedBy: null,
+          description: null,
           states: [
             {
               id: 'state-1',
@@ -111,13 +114,14 @@ describe('Policy API', () => {
       // Given
       const newPolicy = {
         name: '문서 결재 정책',
-        description: '문서 결재 흐름 관리',
+        revisionSequence: 'A,B,C,D',
         isActive: true,
       }
 
       const createdPolicy = {
         id: 'policy-123',
         ...newPolicy,
+        description: null,
         createdAt: new Date(),
         updatedAt: new Date(),
         createdBy: null,
@@ -168,8 +172,9 @@ describe('Policy API', () => {
       const mockPolicy = {
         id: 'policy-123',
         name: '정책 1',
-        description: '설명 1',
+        revisionSequence: 'A,B,C',
         isActive: true,
+        description: null,
         createdAt: new Date(),
         updatedAt: new Date(),
         createdBy: null,
@@ -223,8 +228,9 @@ describe('Policy API', () => {
       const updatedPolicy = {
         id: 'policy-123',
         name: '수정된 정책',
-        description: '수정된 설명',
+        revisionSequence: 'X,Y,Z',
         isActive: false,
+        description: null,
         createdAt: new Date(),
         updatedAt: new Date(),
         createdBy: null,
@@ -262,8 +268,9 @@ describe('Policy API', () => {
       prismaMock.policy.delete.mockResolvedValue({
         id: 'policy-123',
         name: '정책 1',
-        description: '설명 1',
+        revisionSequence: 'A,B,C',
         isActive: true,
+        description: null,
         createdAt: new Date(),
         updatedAt: new Date(),
         createdBy: null,

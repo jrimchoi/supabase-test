@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import {
   Table,
   TableBody,
@@ -12,6 +13,8 @@ import {
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
+import { ScrollableTable } from '@/components/ui/scrollable-table'
 import { GroupDialog } from './GroupDialog'
 import { DeleteGroupDialog } from './DeleteGroupDialog'
 import { PlusCircle, Edit, Trash2 } from 'lucide-react'
@@ -81,35 +84,25 @@ export function GroupList({ initialGroups }: { initialGroups: Group[] }) {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-shrink-0 mb-2">
-        <Button onClick={handleCreate}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          새 Group 생성
-        </Button>
+    <div className="flex flex-col h-full mt-2.5">
+      {/* 헤더 카드: 타이틀 + 설명 + 버튼 */}
+      <div className="admin-header-wrapper">
+        <Card>
+          <CardContent className="admin-header-card-content">
+            <h1 className="text-lg font-bold tracking-tight">Group 관리</h1>
+            <p className="text-sm text-muted-foreground">사용자 그룹을 생성하고 관리합니다 (계층 구조 지원)</p>
+            <div className="flex-1" />
+            <Button onClick={handleCreate}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              새 Group 생성
+            </Button>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="scrollable-table-container">
-        <div className="table-header-wrapper">
-          <Table>
-            <TableHeader>
-            <TableRow>
-              <TableHead>이름</TableHead>
-              <TableHead>설명</TableHead>
-              <TableHead className="w-40">부모 그룹</TableHead>
-              <TableHead className="w-24">상태</TableHead>
-              <TableHead className="w-24">하위</TableHead>
-              <TableHead className="w-32">권한 수</TableHead>
-              <TableHead className="w-32">사용자 수</TableHead>
-              <TableHead className="w-40">생성일</TableHead>
-              <TableHead className="w-40">작업</TableHead>
-            </TableRow>
-          </TableHeader>
-          </Table>
-        </div>
-        <div className="scrollable-table-wrapper">
-          <Table>
-            <TableHeader>
+      <ScrollableTable>
+        <Table>
+          <TableHeader>
             <TableRow>
               <TableHead>이름</TableHead>
               <TableHead>설명</TableHead>
@@ -173,13 +166,15 @@ export function GroupList({ initialGroups }: { initialGroups: Group[] }) {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(group)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
+                      <Link href={`/admin/groups/${group.id}`}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          title="상세보기 (사용자 관리)"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </Link>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -194,8 +189,7 @@ export function GroupList({ initialGroups }: { initialGroups: Group[] }) {
             )}
           </TableBody>
         </Table>
-        </div>
-      </div>
+      </ScrollableTable>
 
       <GroupDialog
         group={selectedGroup}

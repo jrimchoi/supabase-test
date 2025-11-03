@@ -22,6 +22,8 @@ describe('BusinessObject API (V2)', () => {
         {
           id: 'obj-1',
           typeId: 'type-1',
+          name: null,
+          revision: null,
           policyId: 'policy-1',
           currentState: 'Draft',
           data: null,
@@ -31,6 +33,8 @@ describe('BusinessObject API (V2)', () => {
         {
           id: 'obj-2',
           typeId: 'type-1',
+          name: null,
+          revision: null,
           policyId: 'policy-1',
           currentState: 'Review',
           data: { note: 'test' },
@@ -63,6 +67,8 @@ describe('BusinessObject API (V2)', () => {
         {
           id: 'obj-1',
           typeId: 'type-123',
+          name: null,
+          revision: null,
           policyId: 'policy-1',
           currentState: 'Draft',
           data: null,
@@ -87,12 +93,48 @@ describe('BusinessObject API (V2)', () => {
       expect(data.data[0].typeId).toBe('type-123')
     })
 
+    it('typeId로 필터링해야 함 (리비전 시스템)', async () => {
+      // Given
+      const mockObjects = [
+        {
+          id: 'obj-1',
+          typeId: null,
+          typeId: 'btype-invoice',
+          name: '송장-001',
+          revision: 'A',
+          policyId: 'policy-1',
+          currentState: 'Draft',
+          data: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]
+
+      prismaMock.businessObject.findMany.mockResolvedValue(mockObjects as any)
+
+      const request = createMockRequest({
+        method: 'GET',
+        url: '/api/business-objects?typeId=btype-invoice',
+      })
+
+      // When
+      const response = await GET(request)
+      const data = await parseResponse(response)
+
+      // Then
+      expect(response.status).toBe(200)
+      expect(data.data[0].typeId).toBe('btype-invoice')
+      expect(data.data[0].revision).toBe('A')
+    })
+
     it('currentState로 필터링해야 함', async () => {
       // Given
       const mockObjects = [
         {
           id: 'obj-1',
           typeId: 'type-1',
+          name: null,
+          revision: null,
           policyId: 'policy-1',
           currentState: 'Approved',
           data: null,
@@ -131,6 +173,8 @@ describe('BusinessObject API (V2)', () => {
       const createdObject = {
         id: 'obj-123',
         ...newObject,
+        name: null,
+        revision: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       }
@@ -178,6 +222,8 @@ describe('BusinessObject API (V2)', () => {
       const updatedObject = {
         id: 'obj-123',
         typeId: 'type-1',
+        name: null,
+        revision: null,
         policyId: 'policy-1',
         currentState: 'Approved',
         data: null,
@@ -212,6 +258,8 @@ describe('BusinessObject API (V2)', () => {
       prismaMock.businessObject.delete.mockResolvedValue({
         id: 'obj-123',
         typeId: 'type-1',
+        name: null,
+        revision: null,
         policyId: 'policy-1',
         currentState: 'Draft',
         data: null,

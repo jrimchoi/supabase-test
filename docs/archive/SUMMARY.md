@@ -16,7 +16,7 @@
 9. ✅ **UserPermission** - User별 직접 권한
 
 #### 비즈니스 모델 (3개)
-10. ✅ **BusinessType** - 비즈니스 타입
+10. ✅ **Type** - 비즈니스 타입
 11. ✅ **BusinessObject** - 비즈니스 객체 (Revision 관리)
 12. ✅ **BusinessAttribute** - 속성 메타데이터
 
@@ -37,7 +37,7 @@
 | UserRole | `/api/user-roles` | 목록/생성/조회/삭제 |
 | UserGroup | `/api/user-groups` | 목록/생성/조회/삭제 |
 | UserPermission | `/api/user-permissions` | 목록/생성/조회/수정/삭제 |
-| **BusinessType** | `/api/business-types` | 목록/생성/조회/수정/삭제 |
+| **Type** | `/api/business-types` | 목록/생성/조회/수정/삭제 |
 | **BusinessObject** | `/api/business-objects` | 목록/생성/조회/수정/삭제 + Revision 관리 |
 | **BusinessAttribute** | `/api/business-attributes` | 목록/생성/조회/수정/삭제 |
 
@@ -107,7 +107,7 @@ src/
     user-roles/                  # UserRole CRUD
     user-groups/                 # UserGroup CRUD
     user-permissions/            # UserPermission CRUD
-    business-types/              # BusinessType CRUD
+    business-types/              # Type CRUD
     business-objects/            # BusinessObject CRUD + Revision
     business-attributes/         # BusinessAttribute CRUD + Enum
   lib/
@@ -171,9 +171,9 @@ postman/
 ```
 1. Policy 생성
    ↓ (name)
-2. BusinessType 생성 (policy: Policy.name)
+2. Type 생성 (policy: Policy.name)
    ↓ (name)
-3. BusinessObject 생성 (type: BusinessType.name)
+3. BusinessObject 생성 (type: Type.name)
    ↓
 4. BusinessAttribute 정의 (속성 메타데이터)
 ```
@@ -184,7 +184,7 @@ postman/
 // 1. Policy
 { "name": "문서 결재 정책", "version": 1 }
 
-// 2. BusinessType
+// 2. Type
 { "name": "Contract", "policy": "문서 결재 정책" }
 
 // 3. BusinessObject

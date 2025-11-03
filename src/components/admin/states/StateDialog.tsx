@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useTransition } from 'react'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer'
 import {
   Select,
   SelectContent,
@@ -36,7 +36,6 @@ type State = {
 type Policy = {
   id: string
   name: string
-  version: number
 }
 
 type Props = {
@@ -115,15 +114,16 @@ export function StateDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>{state ? 'State 수정' : '새 State 생성'}</DialogTitle>
-            <DialogDescription>상태 정보를 입력하세요</DialogDescription>
-          </DialogHeader>
+    <Drawer open={open} onOpenChange={onOpenChange} direction="right">
+      <DrawerContent className="h-screen w-[500px] max-w-[90vw]">
+        <form onSubmit={handleSubmit} className="flex flex-col h-full">
+          <DrawerHeader className="flex-shrink-0 border-b">
+            <DrawerTitle>{state ? 'State 수정' : '새 State 생성'}</DrawerTitle>
+            <DrawerDescription>상태 정보를 입력하세요</DrawerDescription>
+          </DrawerHeader>
 
-          <div className="grid gap-4 py-4">
+          <div className="flex-1 overflow-y-auto px-4">
+            <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="name">이름 *</Label>
               <Input
@@ -156,7 +156,7 @@ export function StateDialog({
                   <SelectContent>
                     {availablePolicies.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
-                        {p.name} v{p.version}
+                        {p.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -208,24 +208,28 @@ export function StateDialog({
                 </Label>
               </div>
             </div>
+            </div>
           </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isPending}
-            >
-              취소
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? '저장 중...' : '저장'}
-            </Button>
-          </DialogFooter>
+          <DrawerFooter className="flex-shrink-0 border-t">
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isPending}
+                className="flex-1"
+              >
+                취소
+              </Button>
+              <Button type="submit" disabled={isPending} className="flex-1">
+                {isPending ? '저장 중...' : '저장'}
+              </Button>
+            </div>
+          </DrawerFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </DrawerContent>
+    </Drawer>
   )
 }
 

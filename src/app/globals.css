@@ -3,6 +3,13 @@
 @tailwind utilities;
 
 @layer base {
+  /* html, body 높이 100%로 설정 */
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  
   :root {
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
@@ -83,99 +90,175 @@
     @apply py-2 px-4;
   }
   
-  /* Sticky 헤더를 위한 테이블 구조 */
-  .scrollable-table-container {
-    display: flex;
-    flex-direction: column;
+  /* 단일 테이블 + Sticky 헤더 방식 */
+  .scrollable-table-container-single {
     flex: 1;
     min-height: 0;
     border: 1px solid hsl(var(--border));
     border-radius: 0.5rem;
-    overflow: hidden;
+    overflow: auto;
   }
   
-  /* 헤더 영역 (고정) */
-  .table-header-wrapper {
-    flex-shrink: 0;
-    overflow-x: auto;  /* 가로 스크롤 추가 */
-    overflow-y: hidden;
-  }
-  
-  .table-header-wrapper table {
+  .scrollable-table-container-single table {
+    width: fit-content;
     min-width: 100%;
-    table-layout: auto;  /* 내용에 맞게 자동 조정 */
+    table-layout: auto;
   }
   
-  /* Body 영역 (가로/세로 스크롤) */
-  .scrollable-table-wrapper {
-    overflow-x: auto;  /* 가로 스크롤 추가 */
-    overflow-y: auto;  /* 세로 스크롤 유지 */
-    flex: 1;
+  /* Sticky 헤더 */
+  .scrollable-table-container-single thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: hsl(var(--background));
   }
   
-  .scrollable-table-wrapper table {
-    min-width: 100%;
-    table-layout: auto;  /* 내용에 맞게 자동 조정 */
+  .scrollable-table-container-single thead::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: hsl(var(--border));
   }
   
-  /* 바디 테이블의 헤더 숨김 */
-  .scrollable-table-wrapper thead {
-    visibility: hidden;
-    height: 0;
-  }
-  
-  .scrollable-table-wrapper thead tr {
-    height: 0;
-    line-height: 0;
-  }
-  
-  .scrollable-table-wrapper thead th {
-    height: 0;
-    padding: 0;
-    border: 0;
-  }
-  
-  /* 텍스트 줄바꿈 방지 */
-  .scrollable-table-wrapper td,
-  .table-header-wrapper th {
+  /* 텍스트 오버플로우 처리 */
+  .scrollable-table-container-single td,
+  .scrollable-table-container-single th {
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative;
   }
   
-  /* 세로 스크롤바 스타일링 */
-  .scrollable-table-wrapper::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;  /* 가로 스크롤바 높이 */
+  /* 셀 내부의 모든 요소도 ellipsis 적용 */
+  .scrollable-table-container-single td > *,
+  .scrollable-table-container-single th > * {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    max-width: 100%;
   }
   
-  .scrollable-table-wrapper::-webkit-scrollbar-track {
-    background: hsl(var(--muted) / 0.3);
+  /* flex 컨테이너는 예외 (버튼 그룹 등) */
+  .scrollable-table-container-single td > .flex,
+  .scrollable-table-container-single th > .flex {
+    display: flex;
   }
   
-  .scrollable-table-wrapper::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground) / 0.3);
-    border-radius: 5px;
+  /* code, span 등 인라인 요소도 ellipsis */
+  .scrollable-table-container-single td code,
+  .scrollable-table-container-single td span:not(.flex *),
+  .scrollable-table-container-single th code,
+  .scrollable-table-container-single th span:not(.flex *) {
+    display: inline-block;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: bottom;
   }
   
-  .scrollable-table-wrapper::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.5);
+  /* 리사이즈 핸들 */
+  .column-resizer {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    cursor: col-resize;
+    user-select: none;
+    background: transparent;
+    z-index: 1;
   }
   
-  /* 가로 스크롤바 스타일링 (헤더) */
-  .table-header-wrapper::-webkit-scrollbar {
+  .column-resizer:hover {
+    background: hsl(var(--primary) / 0.5);
+  }
+  
+  .column-resizer.resizing {
+    background: hsl(var(--primary));
+  }
+  
+  /* 리사이즈 가능한 헤더 셀 */
+  .resizable-header {
+    position: relative;
+  }
+  
+  /* 스크롤바 스타일링 */
+  .scrollable-table-container-single::-webkit-scrollbar {
     width: 10px;
     height: 10px;
   }
   
-  .table-header-wrapper::-webkit-scrollbar-track {
+  .scrollable-table-container-single::-webkit-scrollbar-track {
     background: hsl(var(--muted) / 0.3);
   }
   
-  .table-header-wrapper::-webkit-scrollbar-thumb {
+  .scrollable-table-container-single::-webkit-scrollbar-thumb {
     background: hsl(var(--muted-foreground) / 0.3);
     border-radius: 5px;
   }
   
-  .table-header-wrapper::-webkit-scrollbar-thumb:hover {
+  .scrollable-table-container-single::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--muted-foreground) / 0.5);
   }
+  
+  /* Admin 레이아웃 최상단 컨테이너 */
+  .admin-layout-container {
+    display: flex;
+    height: 100vh;          /* 화면 전체 높이 */
+    overflow: hidden;
+    background: hsl(var(--background));
+  }
+  
+  /* Admin 리스트 페이지 공통 레이아웃 클래스 */
+  .admin-page-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding-left: 1.5rem;   /* px-6: 24px */
+    padding-right: 1.5rem;  /* px-6: 24px */
+    padding-bottom: 1.25rem; /* pb-5: 20px */
+  }
+  
+  .admin-list-wrapper {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    margin-top: 0.625rem;  /* mt-2.5: 10px */
+  }
+  
+  .admin-header-wrapper {
+    flex-shrink: 0;
+    margin-bottom: 0.25rem;  /* mb-1: 4px */
+  }
+  
+  .admin-header-card-content {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;           /* gap-2: 8px */
+    padding-top: 0.25rem;   /* py-1: 4px */
+    padding-bottom: 0.25rem; /* py-1: 4px */
+    padding-left: 0.75rem;  /* px-3: 12px */
+    padding-right: 0.75rem; /* px-3: 12px */
+  }
+  
+  .admin-filter-wrapper {
+    flex-shrink: 0;
+    margin-bottom: 0.125rem;  /* mb-0.5: 2px */
+    display: flex;
+    gap: 0.5rem;              /* gap-2: 8px */
+    align-items: center;
+  }
+  
+  .admin-table-spacing {
+    flex-shrink: 0;
+    margin-top: 0.625rem;  /* mt-2.5: 10px */
+    margin-bottom: 0;
+  }
+  
 }

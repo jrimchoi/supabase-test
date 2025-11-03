@@ -4,7 +4,7 @@
 
 비즈니스 타입과 객체를 관리하는 시스템입니다.
 
-- **BusinessType**: 비즈니스 유형 정의 (예: Document, Purchase Order, Contract)
+- **Type**: 비즈니스 유형 정의 (예: Document, Purchase Order, Contract)
 - **BusinessObject**: 실제 비즈니스 객체 (예: 계약서-001, 발주서-002)
 
 ---
@@ -14,14 +14,14 @@
 ### 전체 구조
 
 ```
-BusinessType (비즈니스 타입)
+Type (비즈니스 타입)
     ↓
 BusinessObject (비즈니스 객체)
     ↓
 BusinessAttribute (속성 메타데이터)
 ```
 
-### 1. BusinessType
+### 1. Type
 
 | 필드 | 타입 | 설명 |
 |------|------|------|
@@ -40,7 +40,7 @@ BusinessAttribute (속성 메타데이터)
 | 필드 | 타입 | 설명 |
 |------|------|------|
 | `id` | String (UUID) | Primary Key |
-| `type` | String | BusinessType 이름 |
+| `type` | String | Type 이름 |
 | `name` | String | 객체 이름 |
 | `revision` | Int | 버전 번호 (1, 2, 3, ...) |
 | `current` | Boolean | 현재 버전 여부 |
@@ -75,7 +75,7 @@ BusinessAttribute (속성 메타데이터)
 
 ## 🚀 API 사용법
 
-### BusinessType
+### Type
 
 #### 생성
 
@@ -291,21 +291,21 @@ GET /api/business-objects?name=계약서-001&currentOnly=true
 
 ## 🔍 Policy 연결
 
-### BusinessType과 Policy 연결
+### Type과 Policy 연결
 
 ```javascript
 // 1. Policy 생성
 POST /api/policies
 { "name": "문서 결재 정책" }
 
-// 2. BusinessType 생성 (Policy name 연결)
+// 2. Type 생성 (Policy name 연결)
 POST /api/business-types
 {
   "name": "Document",
   "policy": "문서 결재 정책"  // Policy의 name
 }
 
-// 3. BusinessType의 Policy 조회
+// 3. Type의 Policy 조회
 GET /api/business-types/{id}
 → { "policy": "문서 결재 정책" }
 
@@ -323,7 +323,7 @@ GET /api/policies?latestVersion=true
 ### 예제 1: 문서 타입 및 객체 생성
 
 ```javascript
-// 1. BusinessType 생성
+// 1. Type 생성
 const typeResponse = await fetch('/api/business-types', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
@@ -332,7 +332,7 @@ const typeResponse = await fetch('/api/business-types', {
     policy: '계약 결재 정책',
   }),
 })
-const businessType = await typeResponse.json()
+const type = await typeResponse.json()
 
 // 2. BusinessObject 생성
 const objResponse = await fetch('/api/business-objects', {
@@ -384,7 +384,7 @@ data.forEach(obj => {
 
 ## 📊 데이터 구조 예시
 
-### BusinessType 데이터
+### Type 데이터
 
 ```json
 [
@@ -447,14 +447,14 @@ data.forEach(obj => {
 ### Supabase SQL Editor에서 실행
 
 ```sql
--- BusinessType 테이블 생성
-CREATE TABLE IF NOT EXISTS "BusinessType" (
+-- Type 테이블 생성
+CREATE TABLE IF NOT EXISTS "Type" (
   "id" TEXT NOT NULL,
   "name" TEXT NOT NULL UNIQUE,
   "policy" TEXT NOT NULL,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT "BusinessType_pkey" PRIMARY KEY ("id")
+  CONSTRAINT "Type_pkey" PRIMARY KEY ("id")
 );
 
 -- BusinessObject 테이블 생성
@@ -496,13 +496,13 @@ Tests:       32 passed, 32 total
 ## 📂 생성된 파일
 
 ### Backend API
-- ✅ `src/app/api/business-types/route.ts` - BusinessType 목록/생성
-- ✅ `src/app/api/business-types/[id]/route.ts` - BusinessType 조회/수정/삭제
+- ✅ `src/app/api/business-types/route.ts` - Type 목록/생성
+- ✅ `src/app/api/business-types/[id]/route.ts` - Type 조회/수정/삭제
 - ✅ `src/app/api/business-objects/route.ts` - BusinessObject 목록/생성
 - ✅ `src/app/api/business-objects/[id]/route.ts` - BusinessObject 조회/수정/삭제
 
 ### Tests
-- ✅ `src/__tests__/api/business-types.test.ts` - BusinessType 테스트
+- ✅ `src/__tests__/api/business-types.test.ts` - Type 테스트
 - ✅ `src/__tests__/api/business-objects.test.ts` - BusinessObject 테스트
 
 ### Database
@@ -514,7 +514,7 @@ Tests:       32 passed, 32 total
 
 ## 🎯 API 엔드포인트
 
-### BusinessType
+### Type
 
 | Method | Endpoint | 설명 |
 |--------|----------|------|
@@ -548,9 +548,9 @@ Tests:       32 passed, 32 total
 ```
 1. Policy 생성
    ↓
-2. BusinessType 생성 (Policy name 지정)
+2. Type 생성 (Policy name 지정)
    ↓
-3. BusinessObject 생성 (BusinessType name 지정)
+3. BusinessObject 생성 (Type name 지정)
    ↓
 4. BusinessObject의 상태는 Policy의 State를 따름 (향후 구현 가능)
 ```
@@ -562,7 +562,7 @@ Tests:       32 passed, 32 total
 POST /api/policies
 { "name": "문서 결재 정책" }
 
-// 2. BusinessType 생성
+// 2. Type 생성
 POST /api/business-types
 { "name": "Contract", "policy": "문서 결재 정책" }
 
@@ -584,15 +584,15 @@ GET /api/business-objects?type=Contract
 
 ### 1. Policy는 문자열
 
-- `BusinessType.policy`는 Policy 테이블을 **참조하지 않음**
+- `Type.policy`는 Policy 테이블을 **참조하지 않음**
 - 단순 **문자열**로 저장
 - Policy 이름 변경 시 수동으로 업데이트 필요
 
 ### 2. Type도 문자열
 
-- `BusinessObject.type`은 BusinessType을 **참조하지 않음**
+- `BusinessObject.type`은 Type을 **참조하지 않음**
 - 단순 **문자열**로 저장
-- BusinessType 이름 변경 시 주의
+- Type 이름 변경 시 주의
 
 ### 3. Revision 관리
 

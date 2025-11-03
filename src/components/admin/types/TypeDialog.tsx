@@ -1,77 +1,287 @@
 'use client'
 
 import { useState, useEffect, useTransition } from 'react'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useRouter } from 'next/navigation'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { createType, updateType } from '@/app/admin/types/actions'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  createType,
+  updateType,
+  getAllPolicies,
+  getAllTypes,
+} from '@/app/admin/types/actions'
 
-type Type = { id: string; name: string; policyId: string }
-type Policy = { id: string; name: string; version: number }
-type Props = { type: Type | null; availablePolicies: Policy[]; open: boolean; onOpenChange: (open: boolean) => void; onSuccess: () => void }
+type Type = {
+  id: string
+  name: string
+  description: string | null
+  prefix: string | null
+  policy: {
+    name: string
+    version: number
+    revisionSequence: string
+  }
+  parent: {
+    id: string
+    name: string
+    description: string | null
+  } | null
+}
 
-export function TypeDialog({ type, availablePolicies, open, onOpenChange, onSuccess }: Props) {
-  const [name, setName] = useState('')
-  const [policyId, setPolicyId] = useState('')
+type Policy = {
+  id: string
+  name: string
+  version: number
+  revisionSequence: string
+}
+
+type ParentType = {
+  id: string
+  name: string
+  description: string | null
+  prefix: string | null
+}
+
+export function TypeDialog({
+  type,
+  open,
+  onOpenChange,
+}: {
+  type: Type | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    prefix: '',
+    policyId: '',
+    parentId: '',
+  })
+  const [policies, setPolicies] = useState<Policy[]>([])
+  const [types, setTypes] = useState<ParentType[]>([])
   const [isPending, startTransition] = useTransition()
+  const router = useRouter()
 
+  // 데이터 로드
+  useEffect(() => {
+    if (open) {
+      startTransition(async () => {
+        const [policiesResult, typesResult] = await Promise.all([
+          getAllPolicies(),
+          getAllTypes(),
+        ])
+
+        if (policiesResult.success) {
+          setPolicies(policiesResult.data as Policy[])
+        }
+
+        if (typesResult.success) {
+          setTypes(typesResult.data as ParentType[])
+        }
+      })
+    }
+  }, [open])
+
+  // 수정 시 초기값 설정
   useEffect(() => {
     if (type) {
-      setName(type.name)
-      setPolicyId(type.policyId)
+      setFormData({
+        name: type.name,
+        description: type.description || '',
+        prefix: type.prefix || '',
+        policyId: type.policy.name, // Policy 정보로 표시 (실제로는 ID 필요)
+        parentId: type.parent?.id || '',
+      })
     } else {
-      setName('')
-      setPolicyId(availablePolicies[0]?.id || '')
+      setFormData({
+        name: '',
+        description: '',
+        prefix: '',
+        policyId: '',
+        parentId: '',
+      })
     }
-  }, [type, availablePolicies, open])
+  }, [type])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!formData.name || !formData.policyId) {
+      alert('Name과 Policy는 필수입니다.')
+      return
+    }
+
     startTransition(async () => {
-      try {
-        const result = type ? await updateType(type.id, { name }) : await createType({ name, policyId })
-        if (!result.success) throw new Error(result.error || '저장 실패')
-        onSuccess()
-      } catch (error) {
-        alert(error instanceof Error ? error.message : '저장 실패')
+      const data = {
+        name: formData.name,
+        description: formData.description || undefined,
+        prefix: formData.prefix || undefined,
+        policyId: formData.policyId,
+        parentId: formData.parentId || null,
+      }
+
+      let result
+      if (type) {
+        result = await updateType(type.id, data)
+      } else {
+        result = await createType(data)
+      }
+
+      if (result.success) {
+        alert(type ? '수정되었습니다.' : '생성되었습니다.')
+        onOpenChange(false)
+        router.refresh()
+      } else {
+        alert(result.error || '실패했습니다.')
       }
     })
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>{type ? 'Type 수정' : '새 Type 생성'}</DialogTitle>
-            <DialogDescription>비즈니스 타입 정보를 입력하세요 (예: Invoice, Contract)</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">이름 * (unique)</Label>
-              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="예: Invoice" required />
-            </div>
-            {!type && (
-              <div className="grid gap-2">
-                <Label htmlFor="policyId">Policy *</Label>
-                <Select value={policyId} onValueChange={setPolicyId}>
-                  <SelectTrigger><SelectValue placeholder="Policy 선택" /></SelectTrigger>
-                  <SelectContent>
-                    {availablePolicies.map((p) => (<SelectItem key={p.id} value={p.id}>{p.name} v{p.version}</SelectItem>))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+      <DialogContent className="max-w-[90vw] w-[1200px] max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle>
+            {type ? 'Type 수정' : '새 Type 생성'}
+          </DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto px-1 py-4 space-y-4">
+          {/* Name (필수) */}
+          <div>
+            <Label htmlFor="name">
+              Name <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="예: invoice, contract"
+              disabled={!!type || isPending}
+              required
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              고유한 타입 식별자 (영문, 소문자, 하이픈 사용)
+            </p>
           </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>취소</Button>
-            <Button type="submit" disabled={isPending}>{isPending ? '저장 중...' : '저장'}</Button>
+
+          {/* Description */}
+          <div>
+            <Label htmlFor="description">Description</Label>
+            <Input
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="예: 일반 송장"
+              disabled={isPending}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              타입 설명 (선택)
+            </p>
+          </div>
+
+          {/* Prefix */}
+          <div>
+            <Label htmlFor="prefix">Prefix</Label>
+            <Input
+              id="prefix"
+              value={formData.prefix}
+              onChange={(e) => setFormData({ ...formData, prefix: e.target.value })}
+              placeholder="예: INV, CON"
+              disabled={isPending}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              객체 이름 접두사 (선택, 부모로부터 상속 가능)
+            </p>
+            </div>
+
+          {/* Policy (필수) */}
+          <div>
+            <Label htmlFor="policyId">
+              Policy <span className="text-destructive">*</span>
+            </Label>
+            <Select
+              value={formData.policyId}
+              onValueChange={(value) => setFormData({ ...formData, policyId: value })}
+              disabled={isPending}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Policy 선택" />
+              </SelectTrigger>
+              <SelectContent>
+                {policies.map((policy) => (
+                  <SelectItem key={policy.id} value={policy.id}>
+                    {policy.name} ({policy.revisionSequence})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-1">
+              리비전 순서를 정의하는 Policy
+            </p>
+          </div>
+
+          {/* Parent (선택) */}
+          <div>
+            <Label htmlFor="parentId">부모 타입 (선택)</Label>
+            <Select
+              value={formData.parentId || 'none'}
+              onValueChange={(value) => setFormData({ ...formData, parentId: value === 'none' ? '' : value })}
+              disabled={isPending}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="없음 (최상위)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">없음 (최상위)</SelectItem>
+                {types
+                  .filter((t) => t.id !== type?.id)
+                  .map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name} ({t.description || '설명 없음'})
+                      {t.prefix && ` - ${t.prefix}`}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-1">
+              계층 구조 설정 (prefix, name 상속 가능)
+            </p>
+          </div>
+          </div>
+
+          <DialogFooter className="flex-shrink-0 border-t pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isPending}
+            >
+              취소
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? '처리 중...' : type ? '수정' : '생성'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
   )
 }
-

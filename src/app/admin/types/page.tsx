@@ -5,9 +5,10 @@ import { Pagination } from '@/components/ui/pagination'
 
 export const metadata = {
   title: 'Type 관리',
-  description: '비즈니스 타입 관리 페이지 (EAV)',
+  description: '비즈니스 타입 관리 페이지 (계층 구조, 리비전 시스템, Attribute 연결)',
 }
 
+// 캐싱 비활성화
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
@@ -24,45 +25,36 @@ async function getTypes(page: number, pageSize: number) {
     prisma.type.findMany({
       skip,
       take: pageSize,
-      include: {
-        policy: {
+          include: {
+            policy: {
+              select: {
+                name: true,
+                revisionSequence: true,
+              },
+            },
+        parent: {
           select: {
             id: true,
+            type: true,
             name: true,
-            version: true,
           },
         },
         _count: {
           select: {
+            children: true,
+            objects: true,
             typeAttributes: true,
-            instances: true,
           },
         },
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: [
+        { type: 'asc' },
+      ],
     }),
     prisma.type.count(),
   ])
 
   return { types, total }
-}
-
-async function getPolicies() {
-  const policies = await prisma.policy.findMany({
-    where: { isActive: true },
-    select: {
-      id: true,
-      name: true,
-      version: true,
-    },
-    orderBy: {
-      name: 'asc',
-    },
-  })
-
-  return policies
 }
 
 export default async function TypesPage({ searchParams }: Props) {
@@ -71,25 +63,18 @@ export default async function TypesPage({ searchParams }: Props) {
   const pageSizeParam = typeof params.pageSize === 'string' ? params.pageSize : String(DEFAULT_PAGE_SIZE)
   const pageSize = pageSizeParam === 'all' ? 999999 : parseInt(pageSizeParam, 10)
   
-  const [{ types, total }, policies] = await Promise.all([getTypes(page, pageSize), getPolicies()])
+  const { types, total } = await getTypes(page, pageSize)
   const totalPages = Math.ceil(total / pageSize)
 
   return (
-    <div className="flex flex-col h-[calc(100vh-6rem)]">
-      <div className="flex-shrink-0 mb-3">
-        <h1 className="text-2xl font-bold tracking-tight">Type 관리</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          비즈니스 타입을 정의합니다 (Invoice, Contract 등)
-        </p>
-      </div>
-
-      <div className="flex-1 min-h-0">
+    <div className="admin-page-container">
+      <div className="admin-list-wrapper">
         <Suspense fallback={<div>로딩 중...</div>}>
-          <TypeList initialTypes={types} availablePolicies={policies} />
+          <TypeList initialTypes={types} />
         </Suspense>
       </div>
 
-      <div className="flex-shrink-0 mt-1 mb-1">
+      <div className="admin-table-spacing">
         <Pagination
           currentPage={page}
           totalPages={totalPages}

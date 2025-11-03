@@ -1,25 +1,30 @@
 import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
-import { getServerSupabase } from '@/lib/supabase/server'
 import { RoleDetail } from '@/components/admin/roles/RoleDetail'
 import { notFound } from 'next/navigation'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-type Params = {
-  params: Promise<{ id: string }>
-}
+type Params = { params: Promise<{ id: string }> }
 
-async function getRoleWithUsers(id: string) {
-  // Role 정보
-  const role = await prisma.role.findUnique({
+async function getRoleWithDetails(id: string) {
+  const roleData = await prisma.role.findUnique({
     where: { id },
     include: {
       userRoles: {
-        select: {
-          id: true,
-          userId: true,
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              full_name: true,
+              name: true,
+              avatar_url: true,
+            },
+          },
         },
       },
       _count: {
@@ -31,92 +36,46 @@ async function getRoleWithUsers(id: string) {
     },
   })
 
-  if (!role) return null
+  if (!roleData) return null
 
-  // Supabase에서 사용자 정보 가져오기
-  const supabase = await getServerSupabase()
-  const userIds = role.userRoles.map((ur) => ur.userId)
-
-  let users: any[] = []
-  if (userIds.length > 0) {
-    // UUID 형식 검증 (Supabase는 UUID 타입만 지원)
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-    const validUuids = userIds.filter(id => uuidRegex.test(id))
-    const invalidIds = userIds.filter(id => !uuidRegex.test(id))
-    
-    console.log('🔍 UUID 형식:', validUuids)
-    console.log('⚠️  문자열 형식:', invalidIds)
-    
-    // UUID만 Supabase에서 조회
-    let profiles: any[] = []
-    if (validUuids.length > 0) {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, email, full_name, name, avatar_url')
-        .in('id', validUuids)
-      
-      if (error) {
-        console.error('❌ Supabase 에러:', error)
-      }
-      
-      profiles = data || []
-    }
-    
-    // 모든 사용자 ID를 순서대로 매핑
-    users = userIds.map(id => {
-      // UUID면 profiles에서 찾기
-      if (uuidRegex.test(id)) {
-        const profile = profiles.find(u => u.id === id)
-        // profiles에 없으면 기본 정보로 표시
-        return profile || {
-          id,
-          email: `${id.slice(0, 8)}...`, // UUID 앞부분만
-          full_name: `사용자 (${id.slice(0, 8)})`,
-          name: id.slice(0, 8),
-          avatar_url: null,
-        }
-      } else {
-        // 문자열 ID는 기본 정보로 표시
-        return {
-          id,
-          email: id,
-          full_name: id,
-          name: id,
-          avatar_url: null,
-        }
-      }
-    })
-    
-    console.log('✅ 최종 users 배열:', users.length, users)
-  }
+  // userRoles를 users 형태로 변환
+  const users = roleData.userRoles.map((ur) => ur.user)
 
   return {
-    ...role,
+    ...roleData,
     users,
   }
 }
 
 export default async function RoleDetailPage({ params }: Params) {
   const { id } = await params
-  const roleData = await getRoleWithUsers(id)
+  const roleData = await getRoleWithDetails(id)
 
-  if (!roleData) {
-    notFound()
-  }
+  if (!roleData) notFound()
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">{roleData.name}</h1>
-        <p className="text-muted-foreground mt-2">
-          {roleData.description || 'Role 설명이 없습니다'}
-        </p>
-      </div>
+    <div className="admin-page-container">
+      <div className="admin-list-wrapper">
+        {/* 헤더 카드: 타이틀 + 정보 */}
+        <div className="admin-header-wrapper">
+          <Card>
+            <CardContent className="admin-header-card-content">
+              <h1 className="text-lg font-bold tracking-tight">Role 상세</h1>
+              <p className="text-sm text-muted-foreground">{roleData.name}</p>
+              <div className="flex-1" />
+              <div className="flex items-center gap-2">
+                <Badge variant={roleData.isActive ? "default" : "secondary"} className="text-xs">
+                  {roleData.isActive ? '활성' : '비활성'}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-      <Suspense fallback={<div>로딩 중...</div>}>
-        <RoleDetail role={roleData} />
-      </Suspense>
+        <Suspense fallback={<div>로딩 중...</div>}>
+          <RoleDetail role={roleData} />
+        </Suspense>
+      </div>
     </div>
   )
 }
-

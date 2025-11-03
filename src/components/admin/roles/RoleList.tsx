@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import {
   Table,
   TableBody,
@@ -12,6 +13,7 @@ import {
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
 import { ScrollableTable } from '@/components/ui/scrollable-table'
 import { RoleDialog } from './RoleDialog'
 import { DeleteRoleDialog } from './DeleteRoleDialog'
@@ -76,32 +78,23 @@ export function RoleList({ initialRoles }: { initialRoles: Role[] }) {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-shrink-0 mb-2">
-        <Button onClick={handleCreate}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          새 Role 생성
-        </Button>
+    <div className="flex flex-col h-full mt-2.5">
+      {/* 헤더 카드: 타이틀 + 설명 + 버튼 */}
+      <div className="admin-header-wrapper">
+        <Card>
+          <CardContent className="admin-header-card-content">
+            <h1 className="text-lg font-bold tracking-tight">Role 관리</h1>
+            <p className="text-sm text-muted-foreground">사용자 역할을 생성하고 관리합니다</p>
+            <div className="flex-1" />
+            <Button onClick={handleCreate}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              새 Role 생성
+            </Button>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="scrollable-table-container">
-        <div className="table-header-wrapper">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>이름</TableHead>
-                <TableHead>설명</TableHead>
-                <TableHead className="w-24">상태</TableHead>
-                <TableHead className="w-32">권한 수</TableHead>
-                <TableHead className="w-32">사용자 수</TableHead>
-                <TableHead className="w-40">생성일</TableHead>
-                <TableHead className="w-40">수정일</TableHead>
-                <TableHead className="w-40">작업</TableHead>
-              </TableRow>
-            </TableHeader>
-          </Table>
-        </div>
-        <div className="scrollable-table-wrapper">
+      <ScrollableTable>
           <Table>
             <TableHeader>
               <TableRow>
@@ -159,13 +152,15 @@ export function RoleList({ initialRoles }: { initialRoles: Role[] }) {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(role)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
+                      <Link href={`/admin/roles/${role.id}`}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          title="상세보기 (사용자 관리)"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </Link>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -180,8 +175,7 @@ export function RoleList({ initialRoles }: { initialRoles: Role[] }) {
             )}
           </TableBody>
         </Table>
-        </div>
-      </div>
+      </ScrollableTable>
 
       <RoleDialog
         role={selectedRole}

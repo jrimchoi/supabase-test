@@ -8,7 +8,7 @@ import { Search, Plus } from 'lucide-react'
 
 type Attribute = {
   id: string
-  key: string
+  name: string
   label: string
   attrType: string
   isRequired: boolean
@@ -60,7 +60,7 @@ export function AttributeSearchPanel({ typeId, onAdd, isPending }: Props) {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Key, Label로 검색..."
+          placeholder="Name, Label로 검색..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-9"
@@ -93,7 +93,7 @@ export function AttributeSearchPanel({ typeId, onAdd, isPending }: Props) {
               <div className="flex items-center gap-2">
                 <p className="text-sm font-medium">{attr.label}</p>
               </div>
-              <p className="text-xs text-muted-foreground font-mono">{attr.key}</p>
+              <p className="text-xs text-muted-foreground font-mono">{attr.name}</p>
               <div className="flex gap-2 flex-wrap">
                 <Badge variant="outline" className="text-xs">
                   {attr.attrType}

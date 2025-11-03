@@ -44,7 +44,7 @@ export async function PATCH(
   try {
     const { id } = await params
     const body = await request.json()
-    const { key, label, attrType, isRequired, defaultValue, validation } = body
+    const { name, label, attrType, isRequired, defaultValue, validation } = body
 
     // attrType 검증
     if (attrType) {
@@ -63,7 +63,7 @@ export async function PATCH(
     const attribute = await prisma.attribute.update({
       where: { id },
       data: {
-        ...(key !== undefined && { key }),
+        ...(name !== undefined && { name }),
         ...(label !== undefined && { label }),
         ...(attrType !== undefined && { attrType }),
         ...(isRequired !== undefined && { isRequired }),

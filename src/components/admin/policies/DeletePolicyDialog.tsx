@@ -17,10 +17,9 @@ import { deletePolicy, getDependencies } from '@/app/admin/policies/actions'
 type Policy = {
   id: string
   name: string
-  version: number
   _count?: {
     states: number
-    types: number
+    policyTypes: number
     businessObjects: number
   }
 }
@@ -36,7 +35,7 @@ export function DeletePolicyDialog({ policy, open, onOpenChange, onSuccess }: Pr
   const [isPending, startTransition] = useTransition()
   const [dependencies, setDependencies] = useState<{
     states: number
-    types: number
+    policyTypes: number
     businessObjects: number
   } | null>(null)
 
@@ -82,7 +81,7 @@ export function DeletePolicyDialog({ policy, open, onOpenChange, onSuccess }: Pr
 
   const hasDependencies =
     (dependencies?.states || 0) > 0 ||
-    (dependencies?.types || 0) > 0 ||
+    (dependencies?.policyTypes || 0) > 0 ||
     (dependencies?.businessObjects || 0) > 0
 
   return (
@@ -98,24 +97,23 @@ export function DeletePolicyDialog({ policy, open, onOpenChange, onSuccess }: Pr
         <div className="space-y-4">
           <div className="rounded-md border p-4">
             <p className="text-sm font-medium">{policy.name}</p>
-            <p className="text-sm text-muted-foreground">버전: v{policy.version}</p>
           </div>
 
           {hasDependencies && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>경고: 종속 데이터 존재</AlertTitle>
+              <AlertTitle>삭제 불가: 종속 데이터 존재</AlertTitle>
               <AlertDescription>
-                <p className="mb-2">이 Policy를 삭제하면 다음 데이터도 함께 삭제됩니다:</p>
+                <p className="mb-2">이 Policy를 삭제하려면 먼저 다음 작업을 수행하세요:</p>
                 <ul className="list-disc list-inside space-y-1">
                   {(dependencies?.states || 0) > 0 && (
-                    <li>State: {dependencies?.states}개</li>
+                    <li>State: {dependencies?.states}개 → 삭제 필요</li>
                   )}
-                  {(dependencies?.types || 0) > 0 && (
-                    <li>Type: {dependencies?.types}개</li>
+                  {(dependencies?.policyTypes || 0) > 0 && (
+                    <li>Type: {dependencies?.policyTypes}개 → 삭제 또는 다른 Policy로 변경</li>
                   )}
                   {(dependencies?.businessObjects || 0) > 0 && (
-                    <li>BusinessObject: {dependencies?.businessObjects}개</li>
+                    <li>BusinessObject: {dependencies?.businessObjects}개 → 삭제 또는 Type 변경</li>
                   )}
                 </ul>
               </AlertDescription>
@@ -136,7 +134,7 @@ export function DeletePolicyDialog({ policy, open, onOpenChange, onSuccess }: Pr
             type="button"
             variant="destructive"
             onClick={handleDelete}
-            disabled={isPending}
+            disabled={isPending || hasDependencies}
           >
             {isPending ? '삭제 중...' : '삭제'}
           </Button>

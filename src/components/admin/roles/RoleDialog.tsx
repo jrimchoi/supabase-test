@@ -71,18 +71,19 @@ export function RoleDialog({ role, open, onOpenChange, onSuccess }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>
-              {role ? 'Role 수정' : '새 Role 생성'}
-            </DialogTitle>
-            <DialogDescription>
-              사용자 역할 정보를 입력하세요
-            </DialogDescription>
-          </DialogHeader>
+      <DialogContent className="max-w-[90vw] w-[800px] max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle>
+            {role ? 'Role 수정' : '새 Role 생성'}
+          </DialogTitle>
+          <DialogDescription>
+            사용자 역할 정보를 입력하세요
+          </DialogDescription>
+        </DialogHeader>
 
-          <div className="grid gap-4 py-4">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto px-1">
+            <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="name">이름 *</Label>
               <Input
@@ -118,9 +119,10 @@ export function RoleDialog({ role, open, onOpenChange, onSuccess }: Props) {
                 활성화 (활성화된 Role만 사용 가능합니다)
               </Label>
             </div>
+            </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex-shrink-0 border-t pt-4">
             <Button
               type="button"
               variant="outline"

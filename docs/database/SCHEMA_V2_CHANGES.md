@@ -6,7 +6,7 @@
 
 | V1 | V2 | 변경 내용 |
 |----|----|----------|
-| `BusinessType` | `Type` | Policy와 FK 관계로 변경 |
+| `Type` | `Type` | Policy와 FK 관계로 변경 |
 | `BusinessAttribute` (메타) | `Attribute` | Type별 속성 정의 (스키마) |
 | - | `BusinessAttribute` | EAV 패턴으로 실제 값 저장 |
 | `BusinessObject` (단순) | `BusinessObject` | Type, Policy FK 추가, currentState 추가 |
@@ -16,7 +16,7 @@
 
 ## 📋 새 구조 설명
 
-### 1. Type (이전 BusinessType)
+### 1. Type (이전 Type)
 
 ```prisma
 model Type {
@@ -131,7 +131,7 @@ model BusinessAttribute {
 ### 이전 (V1)
 
 ```javascript
-// BusinessType (독립)
+// Type (독립)
 { name: "Document", policy: "문서 결재 정책" }
 
 // BusinessObject (독립)

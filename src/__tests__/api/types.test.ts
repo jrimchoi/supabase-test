@@ -83,7 +83,9 @@ describe('Type API', () => {
     it('새로운 Type을 생성해야 함', async () => {
       // Given
       const newType = {
+        type: 'purchase-order',
         name: 'Purchase Order',
+        prefix: 'PO',
         policyId: 'policy-123',
       }
 
@@ -91,6 +93,7 @@ describe('Type API', () => {
         id: 'type-456',
         ...newType,
         createdAt: new Date(),
+        updatedAt: new Date(),
       }
 
       prismaMock.type.create.mockResolvedValue(createdType as any)
@@ -108,16 +111,17 @@ describe('Type API', () => {
       // Then
       expect(response.status).toBe(201)
       expect(data.success).toBe(true)
+      expect(data.data.type).toBe('purchase-order')
       expect(data.data.name).toBe('Purchase Order')
       expect(data.data.policyId).toBe('policy-123')
     })
 
-    it('name, policyId가 없으면 400 에러를 반환해야 함', async () => {
+    it('type, policyId가 없으면 400 에러를 반환해야 함', async () => {
       // Given
       const request = createMockRequest({
         method: 'POST',
         url: '/api/types',
-        body: { name: 'Invoice' }, // policyId 누락
+        body: { name: 'Invoice' }, // type, policyId 누락
       })
 
       // When

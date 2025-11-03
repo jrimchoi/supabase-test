@@ -5,13 +5,15 @@ import { useRouter } from 'next/navigation'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
+import { ScrollableTable } from '@/components/ui/scrollable-table'
 import { AttributeDialog } from './AttributeDialog'
 import { PlusCircle, Edit, Trash2 } from 'lucide-react'
 import { deleteAttribute } from '@/app/admin/attributes/actions'
 
 type Attribute = {
   id: string
-  key: string
+  name: string
   label: string
   attrType: string
   isRequired: boolean
@@ -34,47 +36,46 @@ export function AttributeList({ initialAttributes }: { initialAttributes: Attrib
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-shrink-0 mb-2">
-        <Button onClick={() => { setSelected(null); setIsDialogOpen(true) }}>
-          <PlusCircle className="mr-2 h-4 w-4" />새 Attribute 생성
-        </Button>
+    <div className="flex flex-col h-full mt-2.5">
+      {/* 헤더 카드: 타이틀 + 설명 + 버튼 */}
+      <div className="admin-header-wrapper">
+        <Card>
+          <CardContent className="admin-header-card-content">
+            <h1 className="text-lg font-bold tracking-tight">Attribute 관리</h1>
+            <p className="text-sm text-muted-foreground">공통 속성을 정의하고 Type에 할당합니다</p>
+            <div className="flex-1" />
+            <Button onClick={() => { setSelected(null); setIsDialogOpen(true) }}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              새 Attribute 생성
+            </Button>
+          </CardContent>
+        </Card>
       </div>
-      <div className="scrollable-table-container">
-        <div className="table-header-wrapper">
-          <Table>
-            <TableHeader>
+
+      <ScrollableTable>
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableHead>Key</TableHead>
-              <TableHead>Label</TableHead>
-              <TableHead>타입</TableHead>
+              <TableHead className="w-48">Name</TableHead>
+              <TableHead className="w-48">Label</TableHead>
+              <TableHead>설명</TableHead>
+              <TableHead className="w-24">타입</TableHead>
               <TableHead className="w-24">필수</TableHead>
-              <TableHead>사용 중인 Types</TableHead>
-              <TableHead className="w-40">작업</TableHead>
-            </TableRow>
-          </TableHeader>
-          </Table>
-        </div>
-        <div className="scrollable-table-wrapper">
-          <Table>
-            <TableHeader>
-            <TableRow>
-              <TableHead>Key</TableHead>
-              <TableHead>Label</TableHead>
-              <TableHead>타입</TableHead>
-              <TableHead className="w-24">필수</TableHead>
-              <TableHead>사용 중인 Types</TableHead>
+              <TableHead className="w-48">사용 중인 Types</TableHead>
               <TableHead className="w-40">작업</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {initialAttributes.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">등록된 Attribute가 없습니다</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">등록된 Attribute가 없습니다</TableCell></TableRow>
             ) : (
               initialAttributes.map((attr) => (
                 <TableRow key={attr.id}>
-                  <TableCell className="font-mono text-sm">{attr.key}</TableCell>
+                  <TableCell className="font-mono text-sm">{attr.name}</TableCell>
                   <TableCell>{attr.label}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {(attr as any).description || '-'}
+                  </TableCell>
                   <TableCell><Badge variant="outline">{attr.attrType}</Badge></TableCell>
                   <TableCell className="text-center">{attr.isRequired ? '✓' : '-'}</TableCell>
                   <TableCell>
@@ -101,8 +102,8 @@ export function AttributeList({ initialAttributes }: { initialAttributes: Attrib
             )}
           </TableBody>
         </Table>
-        </div>
-      </div>
+      </ScrollableTable>
+
       <AttributeDialog attribute={selected} open={isDialogOpen} onOpenChange={setIsDialogOpen} onSuccess={() => { setIsDialogOpen(false); startTransition(() => router.refresh()) }} />
     </div>
   )

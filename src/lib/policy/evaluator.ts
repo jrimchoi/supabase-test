@@ -72,3 +72,28 @@ export function evaluateTransitionCondition(
 	return evaluateExpression(condition, context);
 }
 
+/**
+ * Permission의 action 필드가 요청된 action을 포함하는지 확인합니다.
+ * action 필드는 쉼표로 구분된 여러 action을 포함할 수 있습니다.
+ * 
+ * @param permissionActions - Permission의 action 필드 (예: "create,modify" 또는 "view")
+ * @param requestedAction - 요청된 action (예: "create")
+ * @returns action 포함 여부
+ * 
+ * @example
+ * checkActionMatch("create,modify", "create") // true
+ * checkActionMatch("view", "create") // false
+ * checkActionMatch("create, modify, delete", "modify") // true
+ */
+export function checkActionMatch(
+	permissionActions: string,
+	requestedAction: string
+): boolean {
+	const actions = permissionActions
+		.split(',')
+		.map(a => a.trim())
+		.filter(a => a.length > 0);
+	
+	return actions.includes(requestedAction);
+}
+

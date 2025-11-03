@@ -1,8 +1,12 @@
 import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
+import { BusinessObjectList } from '@/components/admin/business-objects/BusinessObjectList'
 import { Pagination } from '@/components/ui/pagination'
 
-export const metadata = { title: 'BusinessObject 관리' }
+export const metadata = {
+  title: 'BusinessObject 관리',
+  description: '비즈니스 객체 인스턴스 관리',
+}
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
@@ -21,8 +25,8 @@ async function getBusinessObjects(page: number, pageSize: number) {
       take: pageSize,
       include: {
         type: { select: { id: true, name: true } },
-        policy: { select: { id: true, name: true, version: true } },
-        _count: { select: { attributes: true } },
+        type: { select: { id: true, type: true, name: true, prefix: true } },
+        policy: { select: { id: true, name: true, revisionSequence: true } },
       },
       orderBy: { createdAt: 'desc' },
     }),
@@ -42,24 +46,14 @@ export default async function BusinessObjectsPage({ searchParams }: Props) {
   const totalPages = Math.ceil(total / pageSize)
 
   return (
-    <div className="flex flex-col h-[calc(100vh-6rem)]">
-      <div className="flex-shrink-0 mb-3">
-        <h1 className="text-2xl font-bold tracking-tight">BusinessObject 관리</h1>
-        <p className="text-sm text-muted-foreground mt-1">비즈니스 객체 인스턴스를 관리합니다 (EAV)</p>
-      </div>
-      
-      <div className="flex-1 min-h-0">
-        <div className="rounded-lg border p-4">
-          <p className="text-sm text-muted-foreground">
-            총 {total}개의 BusinessObject가 등록되어 있습니다.
-          </p>
-          <p className="text-sm text-muted-foreground mt-2">
-            BusinessObject 관리 UI는 복잡도가 높아 추후 구현 예정입니다.
-          </p>
-        </div>
+    <div className="admin-page-container">
+      <div className="admin-list-wrapper">
+        <Suspense fallback={<div>로딩 중...</div>}>
+          <BusinessObjectList initialObjects={objects} />
+        </Suspense>
       </div>
 
-      <div className="flex-shrink-0 mt-1 mb-1">
+      <div className="admin-table-spacing">
         <Pagination
           currentPage={page}
           totalPages={totalPages}

@@ -18,7 +18,7 @@ type Props = {
 }
 
 export function AttributeQuickAdd({ typeId, onSuccess }: Props) {
-  const [key, setKey] = useState('')
+  const [name, setName] = useState('')
   const [label, setLabel] = useState('')
   const [attrType, setAttrType] = useState('STRING')
   const [isRequired, setIsRequired] = useState(false)
@@ -33,7 +33,7 @@ export function AttributeQuickAdd({ typeId, onSuccess }: Props) {
       try {
         const result = await createAttribute({
           typeId,
-          key,
+          name,
           label,
           attrType,
           isRequired,
@@ -46,7 +46,7 @@ export function AttributeQuickAdd({ typeId, onSuccess }: Props) {
         }
 
         // 폼 초기화
-        setKey('')
+        setName('')
         setLabel('')
         setAttrType('STRING')
         setIsRequired(false)
@@ -64,13 +64,13 @@ export function AttributeQuickAdd({ typeId, onSuccess }: Props) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-3">
         <div className="grid gap-2">
-          <Label htmlFor="key" className="text-sm">
-            Key * (예: invoiceNumber)
+          <Label htmlFor="name" className="text-sm">
+            Name * (예: invoiceNumber)
           </Label>
           <Input
-            id="key"
-            value={key}
-            onChange={(e) => setKey(e.target.value)}
+            id="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             placeholder="invoiceNumber"
             className="font-mono text-sm"
             required

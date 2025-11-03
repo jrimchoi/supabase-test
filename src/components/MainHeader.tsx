@@ -3,19 +3,34 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
+import { useTheme } from 'next-themes'
 import { getBrowserSupabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Moon, Sun, User, LogOut } from 'lucide-react'
 
 const supabase = getBrowserSupabase()
 
 export function MainHeader() {
   const router = useRouter()
   const pathname = usePathname()
+  const { theme, setTheme } = useTheme()
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
   
   // 로그인/회원가입 페이지 체크
   const isAuthPage = pathname === '/signin' || pathname?.startsWith('/auth/')
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     // 초기 세션 확인
@@ -55,31 +70,100 @@ export function MainHeader() {
   }
 
   return (
-    <header className="border-b">
+    <header className="border-b bg-background">
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
         <Link href="/" className="font-semibold">
           Supabase Auth
         </Link>
-        <nav className="flex gap-4 text-sm items-center">
+        <nav className="flex gap-2 text-sm items-center">
           {/* 로그인/회원가입 페이지에서는 최소 표시 */}
           {isAuthPage ? (
-            <Link href="/" className="text-muted-foreground hover:text-foreground">
-              홈
-            </Link>
+            <>
+              <Link href="/" className="text-muted-foreground hover:text-foreground">
+                홈
+              </Link>
+              {/* Dark Mode Toggle */}
+              {mounted && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                >
+                  {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                </Button>
+              )}
+            </>
           ) : loading ? (
-            <span className="text-muted-foreground">로딩...</span>
+            <>
+              <span className="text-muted-foreground">로딩...</span>
+              {mounted && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                >
+                  {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                </Button>
+              )}
+            </>
           ) : user ? (
             <>
-              <span className="text-muted-foreground">{user.email}</span>
-              <Link href="/admin">관리자</Link>
-              <Button variant="ghost" size="sm" onClick={handleSignOut}>
-                로그아웃
-              </Button>
+              <Link href="/admin" className="text-muted-foreground hover:text-foreground">
+                관리자
+              </Link>
+              
+              {/* Dark Mode Toggle */}
+              {mounted && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                >
+                  {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                </Button>
+              )}
+              
+              {/* Profile Menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <User className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="flex flex-col space-y-1 p-2">
+                    <p className="text-sm font-medium">{user.email}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {user.user_metadata?.full_name || '사용자'}
+                    </p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    로그아웃
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <>
-              <Link href="/signin">로그인</Link>
-              <Link href="/admin">관리자</Link>
+              <Link href="/signin" className="text-muted-foreground hover:text-foreground">
+                로그인
+              </Link>
+              <Link href="/admin" className="text-muted-foreground hover:text-foreground">
+                관리자
+              </Link>
+              
+              {/* Dark Mode Toggle */}
+              {mounted && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                >
+                  {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                </Button>
+              )}
             </>
           )}
         </nav>

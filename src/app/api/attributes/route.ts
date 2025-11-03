@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
           attribute: true,
         },
         orderBy: {
-          attribute: { key: 'asc' },
+          attribute: { name: 'asc' },
         },
       })
       const attributes = typeAttributes.map((ta) => ta.attribute)
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
     // typeId 없으면 모든 공통 Attribute 조회
     const attributes = await prisma.attribute.findMany({
-      orderBy: { key: 'asc' },
+      orderBy: { name: 'asc' },
     })
 
     return NextResponse.json({ success: true, data: attributes })
@@ -43,11 +43,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { key, label, attrType, isRequired, defaultValue, validation } = body
+    const { name, label, attrType, isRequired, defaultValue, validation } = body
 
-    if (!key || !label || !attrType) {
+    if (!name || !label || !attrType) {
       return NextResponse.json(
-        { success: false, error: 'key, label, attrType은 필수입니다.' },
+        { success: false, error: 'name, label, attrType은 필수입니다.' },
         { status: 400 }
       )
     }
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     // 공통 Attribute 생성 (typeId 없음)
     const attribute = await prisma.attribute.create({
       data: {
-        key,
+        name,
         label,
         attrType,
         isRequired: isRequired ?? false,

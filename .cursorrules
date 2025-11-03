@@ -161,6 +161,7 @@ NEXT_PUBLIC_SITE_URL="http://localhost:3000"  # 개발: localhost, 배포: 실�
 4. **컴포넌트 분리**: 재사용성과 유지보수성 고려
 5. **타입 안전성**: TypeScript strict mode 준수
 6. **일관성**: 기존 패턴과 스타일 유지
+7. **Description 필드**: 모든 주요 엔티티에 `description` 필드 포함 (Policy, State, Role, Group, Type, Attribute, Type, BusinessObject)
 
 ## API 엔드포인트
 
@@ -203,6 +204,8 @@ NEXT_PUBLIC_SITE_URL="http://localhost:3000"  # 개발: localhost, 배포: 실�
 - **Group 권한**: `Permission` (targetType='group')
 - **Expression 평가**: `expression` 필드 평가 결과가 `true`일 때만 적용
 - 평가기: `src/lib/policy/evaluator.ts`의 `evaluateExpression()`
+- **멀티 Action**: `action` 필드는 쉼표로 구분된 여러 action 포함 가능 (예: "create,modify,delete")
+  - `checkActionMatch()` 함수로 요청된 action이 포함되어 있는지 확인
 
 ### UI 관리
 
@@ -210,12 +213,25 @@ NEXT_PUBLIC_SITE_URL="http://localhost:3000"  # 개발: localhost, 배포: 실�
 - **권한 테이블**: Resource × Action × Target (User/Role/Group) 조합 관리
 - 각 행별로 Role, Group, User 권한 추가 가능
 - Expression 편집기로 조건 입력
+- **Action 멀티 선택**: Permission 생성/수정 시 Checkbox로 여러 action 선택 가능
+  - 저장 시 쉼표로 join하여 저장
+  - 조회 시 split하여 여러 개의 Badge로 표시
+
+### 필터링 및 페이징 (Permission, StateTransition 페이지)
+
+- **Policy 검색**: 2자 이상 입력 시 드롭다운으로 검색 결과 표시
+- **클라이언트 사이드 필터링**: 모든 데이터를 먼저 로드하고 클라이언트에서 필터링
+- **클라이언트 사이드 페이징**: 필터링된 데이터 기준으로 클라이언트에서 페이징 처리
+- **페이지 크기 선택**: 10, 20, 50, 100, 전체 중 선택 가능
+- 필터 변경 시 자동으로 첫 페이지로 이동
 
 ### 파일 위치
 
 - `prisma/schema.prisma`: Prisma 스키마 정의
 - `src/lib/policy/types.ts`: TypeScript 타입 정의
 - `src/lib/policy/evaluator.ts`: Expression 평가기
+- `src/lib/business-type-utils.ts`: Type 유틸리티 함수 (속성 상속)
+- `src/lib/prisma/middleware.ts`: 리비전 자동 할당 미들웨어
 
 ### Expression 평가 보안
 
@@ -248,19 +264,14 @@ export default async function SomePage({ searchParams }: Props) {
   const totalPages = Math.ceil(total / pageSize)
 
   return (
-    <div className="flex flex-col h-[calc(100vh-6rem)]">
-      <div className="flex-shrink-0 mb-3">
-        <h1 className="text-2xl font-bold tracking-tight">제목</h1>
-        <p className="text-sm text-muted-foreground mt-1">설명</p>
-      </div>
-
-      <div className="flex-1 min-h-0">
+    <div className="admin-page-container">
+      <div className="admin-list-wrapper">
         <Suspense fallback={<div>로딩 중...</div>}>
           <SomeList initialData={data} />
         </Suspense>
       </div>
 
-      <div className="flex-shrink-0 mt-1 mb-1">
+      <div className="admin-table-spacing">
         <Pagination
           currentPage={page}
           totalPages={totalPages}
@@ -279,37 +290,54 @@ export default async function SomePage({ searchParams }: Props) {
 ```tsx
 'use client'
 
+import { Card, CardContent } from '@/components/ui/card'
 import { ScrollableTable } from '@/components/ui/scrollable-table'
 
 export function SomeList({ initialData }: { initialData: Data[] }) {
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-shrink-0 mb-2">
-        <Button onClick={handleCreate}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          새 항목 생성
-        </Button>
+    <div className="flex flex-col h-full mt-2.5">
+      {/* 헤더 카드: 타이틀 + 설명 + 버튼 (필터 포함 가능) */}
+      <div className="admin-header-wrapper">
+        <Card>
+          {/* 필터가 없는 경우 */}
+          <CardContent className="admin-header-card-content">
+            <h1 className="text-lg font-bold tracking-tight">제목</h1>
+            <p className="text-sm text-muted-foreground">설명</p>
+            <div className="flex-1" />
+            <Button onClick={handleCreate}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              새 항목 생성
+            </Button>
+          </CardContent>
+
+          {/* 필터가 있는 경우 (Permission, Transition 등) */}
+          <CardContent className="admin-header-card-content flex-col items-start">
+            {/* 타이틀 행 */}
+            <div className="flex items-center w-full gap-2">
+              <h1 className="text-lg font-bold tracking-tight">제목</h1>
+              <p className="text-sm text-muted-foreground">설명</p>
+              <div className="flex-1" />
+              <Button onClick={handleCreate}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                새 항목 생성
+              </Button>
+            </div>
+            
+            {/* 필터 행 */}
+            <div className="flex gap-2 items-center w-full mt-2">
+              <Input placeholder="검색..." />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <ScrollableTable
-        header={
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>컬럼1</TableHead>
-                <TableHead className="w-20">컬럼2</TableHead>
-                {/* ... */}
-              </TableRow>
-            </TableHeader>
-          </Table>
-        }
-      >
+      <ScrollableTable>
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>컬럼1</TableHead>
               <TableHead className="w-20">컬럼2</TableHead>
-              {/* 헤더와 동일한 구조! */}
+              {/* ... */}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -356,26 +384,37 @@ export function SomeList({ initialData }: { initialData: Data[] }) {
     overflow: hidden;
   }
   
-  /* 헤더 영역 (고정) */
+  /* 헤더 영역 (고정, 스크롤바 숨김) */
   .table-header-wrapper {
     flex-shrink: 0;
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;  /* IE/Edge */
+    padding-right: 10px;  /* 바디 스크롤바 너비만큼 패딩 추가 */
+  }
+  
+  .table-header-wrapper::-webkit-scrollbar {
+    display: none;  /* Chrome/Safari/Opera */
   }
   
   .table-header-wrapper table {
-    width: 100%;
-    table-layout: fixed;
+    width: fit-content;
+    min-width: 100%;
+    table-layout: auto;
   }
   
-  /* 바디 영역 (스크롤) */
+  /* 바디 영역 (가로/세로 스크롤) */
   .scrollable-table-wrapper {
+    overflow-x: auto;
     overflow-y: auto;
     flex: 1;
   }
   
   .scrollable-table-wrapper table {
-    width: 100%;
-    table-layout: fixed;
+    width: fit-content;
+    min-width: 100%;
+    table-layout: auto;
   }
   
   /* 바디 테이블의 헤더 숨김 */
@@ -384,53 +423,135 @@ export function SomeList({ initialData }: { initialData: Data[] }) {
     height: 0;
   }
   
+  /* 텍스트 오버플로우 처리 */
+  .scrollable-table-container-single td,
+  .scrollable-table-container-single th {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative;
+  }
+  
+  /* 셀 내부의 모든 요소도 ellipsis 적용 */
+  .scrollable-table-container-single td > *,
+  .scrollable-table-container-single th > * {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    max-width: 100%;
+  }
+  
+  /* flex 컨테이너는 예외 (버튼 그룹 등) */
+  .scrollable-table-container-single td > .flex,
+  .scrollable-table-container-single th > .flex {
+    display: flex;
+  }
+  
+  /* code, span 등 인라인 요소도 ellipsis */
+  .scrollable-table-container-single td code,
+  .scrollable-table-container-single td span:not(.flex *),
+  .scrollable-table-container-single th code,
+  .scrollable-table-container-single th span:not(.flex *) {
+    display: inline-block;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: bottom;
+  }
+  
   /* 스크롤바 스타일링 */
   .scrollable-table-wrapper::-webkit-scrollbar {
     width: 10px;
+    height: 10px;  /* 가로 스크롤바 높이 */
+  }
+  
+  .scrollable-table-wrapper::-webkit-scrollbar-track {
+    background: hsl(var(--muted) / 0.3);
   }
   
   .scrollable-table-wrapper::-webkit-scrollbar-thumb {
     background: hsl(var(--muted-foreground) / 0.3);
     border-radius: 5px;
   }
+  
+  .scrollable-table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+  
+  /* 컬럼 리사이즈 핸들 */
+  .column-resizer {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    cursor: col-resize;
+    user-select: none;
+    background: transparent;
+    z-index: 1;
+  }
+  
+  .column-resizer:hover {
+    background: hsl(var(--primary) / 0.5);
+  }
+  
+  .column-resizer.resizing {
+    background: hsl(var(--primary));
+  }
+  
+  .resizable-header {
+    position: relative;
+  }
 }
 ```
 
 ### 테이블 구현 규칙
 
-1. **헤더/바디 분리**: 두 개의 별도 테이블로 구성
-   - 헤더 테이블: 실제 표시용 (고정)
-   - 바디 테이블: 데이터용 (스크롤, 헤더는 숨김)
+1. **단일 테이블 + Sticky 헤더**: 하나의 테이블로 구성
+   - 헤더는 `position: sticky`로 고정
+   - 바디만 스크롤
+   - 헤더와 데이터가 자동으로 동일한 컬럼 너비 사용
 
-2. **컬럼 정렬 유지**: 
-   - `table-layout: fixed` 사용
-   - 두 테이블의 헤더 구조가 **정확히 동일**해야 함
-   - 컬럼 너비 (`w-20`, `w-32` 등)도 동일하게 적용
+2. **컬럼 정렬**: 
+   - `table-layout: auto` 사용 (자동 너비 조정)
+   - 컬럼 너비 (`w-20`, `w-32` 등)는 초기 너비 힌트
+   - 리사이즈 시 인라인 스타일로 너비 적용
 
-3. **스크롤바 위치**:
-   - 헤더 영역: `overflow: hidden` (스크롤바 없음)
-   - 바디 영역: `overflow-y: auto` (스크롤바 표시)
+3. **텍스트 오버플로우 처리**:
+   - `text-overflow: ellipsis` 로 긴 텍스트 말줄임표 처리
+   - 호버 시 네이티브 브라우저 툴팁 (title 속성) 표시
+   - 컬럼 너비 조절 시 동적으로 표시 범위 변경
+   - 셀 높이는 호버 시에도 변경되지 않음
 
-4. **페이징**:
+4. **컬럼 리사이즈**:
+   - 각 헤더 셀 오른쪽 끝에 리사이저 핸들 자동 생성
+   - 드래그로 컬럼 너비 조절 가능
+   - 헤더와 바디 셀 너비 동시 적용
+   - 최소 너비: 50px
+
+5. **페이징**:
    - 기본 페이지 크기: 20개
    - 선택 가능: 10, 20, 50, 100, 전체
    - URL 파라미터: `?page=2&pageSize=50`
 
-5. **높이 계산**:
+6. **높이 계산**:
    - 페이지: `h-[calc(100vh-6rem)]`
    - 제목 간격: `mb-3`
    - 버튼 간격: `mb-2`
    - 페이징 간격: `mt-1 mb-1`
 
-6. **Table 컴포넌트 수정**:
+7. **Table 컴포넌트 수정**:
    - `src/components/ui/table.tsx`의 `overflow-auto` 래퍼 제거됨
    - 스크롤은 외부 컨테이너에서 처리
 
 ### 주의사항
 
-- ⚠️ 헤더 테이블과 바디 테이블의 헤더 구조가 **정확히 일치**해야 컬럼이 정렬됨
-- ⚠️ 컬럼 너비 변경 시 두 곳 모두 수정 필요
-- ⚠️ `Table` 컴포넌트는 수정된 버전 사용 (래퍼 div 없음)
+- ⚠️ 단일 테이블 구조이므로 헤더와 데이터 컬럼 너비가 자동으로 일치
+- ⚠️ 긴 텍스트는 자동으로 말줄임표 처리되며, 호버 시 전체 표시됨
+- ⚠️ 각 컬럼 오른쪽 끝을 드래그하여 너비 조절 가능
+- ⚠️ 헤더는 sticky로 고정, 스크롤 시에도 항상 보임
 
 ### ScrollableTable 컴포넌트
 
@@ -438,21 +559,37 @@ export function SomeList({ initialData }: { initialData: Data[] }) {
 
 **기능**:
 - 헤더와 바디의 가로 스크롤 동기화
-- 긴 텍스트 가로 스크롤 지원
+- 긴 텍스트 말줄임표 처리 (hover 시 전체 표시)
+- 컬럼 크기 조절 (드래그 리사이즈)
+  - 각 헤더 셀 오른쪽 끝에 리사이저 핸들 자동 생성
+  - 드래그로 컬럼 너비 조절 가능
+  - 헤더와 바디 모두 동기화
 
 **사용법**:
 ```tsx
 import { ScrollableTable } from '@/components/ui/scrollable-table'
 
-<ScrollableTable
-  header={<Table><TableHeader>...</TableHeader></Table>}
->
+<ScrollableTable>
   <Table>
-    <TableHeader>...</TableHeader>
-    <TableBody>...</TableBody>
+    <TableHeader>
+      <TableRow>
+        <TableHead>컬럼1</TableHead>
+        <TableHead className="w-32">컬럼2</TableHead>
+        {/* ... */}
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      {/* 데이터 행 */}
+    </TableBody>
   </Table>
 </ScrollableTable>
 ```
+
+**리사이즈 기능**:
+- 헤더 셀 오른쪽 경계에 마우스를 올리면 리사이저 핸들 표시
+- 드래그하여 컬럼 너비 조절
+- 최소 너비: 50px
+- 헤더와 바디 셀 너비 자동 동기화
 
 ## 반응형 디자인
 
@@ -482,6 +619,399 @@ useEffect(() => {
   window.addEventListener('resize', checkScreenSize)
 }, [])
 ```
+
+**헤더 UI**:
+- AdminLayout에 상단 헤더 바 추가 (h-16)
+- 다크모드 토글 (Moon/Sun 아이콘)
+- 프로필 메뉴 (User 아이콘 + 드롭다운)
+- 로그아웃 기능 포함
+- ⚠️ **페이지 타이틀 제거**: 최상단 헤더의 페이지 제목 제거됨 (각 페이지의 Card 헤더에 표시)
+
+**페이지 높이 계산**:
+- AdminLayout 최상단: `admin-layout-container` 클래스 + 동적 높이 계산
+- JavaScript로 `window.innerHeight` 계산하여 적용
+- 윈도우 리사이즈 시 자동으로 재계산
+- html, body: `height: 100%` (globals.css)
+- AdminLayout의 main content: `flex-1 flex flex-col overflow-hidden`
+
+**여백 최소화**:
+- 헤더 카드: `py-1 px-3` (최소 패딩)
+- 카드 간격: `mb-1` (최소 여백)
+- List 컴포넌트 상단: `mt-2.5` (10px, 카드 상단 여백)
+- 필터 영역: `mb-0.5` (최소 여백)
+- 페이징 상단: `mt-2.5 mb-0` (10px, 테이블과 페이징 간격)
+- 페이지 하단: `pb-5` (20px)
+
+**재사용 가능한 CSS 클래스** (`globals.css`):
+```css
+@layer components {
+  /* Admin 레이아웃 최상단 컨테이너 */
+  .admin-layout-container {
+    display: flex;
+    height: 100vh;             /* 화면 전체 높이 */
+    overflow: hidden;
+    background: hsl(var(--background));
+  }
+  
+  /* Admin 리스트 페이지 공통 레이아웃 */
+  .admin-page-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;              /* 부모(main - Top Header)의 100% */
+    padding-left: 1.5rem;      /* 24px */
+    padding-right: 1.5rem;     /* 24px */
+    padding-bottom: 1.25rem;   /* 20px */
+  }
+  
+  .admin-list-wrapper {
+    flex: 1;                   /* 남은 공간 모두 사용 */
+    min-height: 0;             /* flex 자식의 높이 제한 */
+    display: flex;
+    flex-direction: column;
+    margin-top: 0.625rem;      /* 10px */
+  }
+  
+  .admin-header-wrapper {
+    flex-shrink: 0;
+    margin-bottom: 0.25rem;    /* 4px */
+  }
+  
+  .admin-header-card-content {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;               /* 8px */
+    padding-top: 0.25rem;      /* 4px */
+    padding-bottom: 0.25rem;   /* 4px */
+    padding-left: 0.75rem;     /* 12px */
+    padding-right: 0.75rem;    /* 12px */
+  }
+  
+  .admin-filter-wrapper {
+    flex-shrink: 0;
+    margin-bottom: 0.125rem;   /* 2px (카드 외부 사용 시) */
+    display: flex;
+    gap: 0.5rem;               /* 8px */
+    align-items: center;
+    /* 카드 내부 사용 시: mt-2로 타이틀 행과 간격 조정 */
+  }
+  
+  .admin-table-spacing {
+    flex-shrink: 0;
+    margin-top: 0.625rem;      /* 10px */
+    margin-bottom: 0;
+  }
+}
+```
+
+**사용 예시**:
+- 페이지: `<div className="admin-page-container">`
+- List wrapper: `<div className="admin-list-wrapper">`
+- 헤더 wrapper: `<div className="admin-header-wrapper">`
+- 헤더 카드 내용 (단일 행): `<CardContent className="admin-header-card-content">`
+- 헤더 카드 내용 (필터 포함): `<CardContent className="admin-header-card-content flex-col items-start">`
+- 필터 wrapper (카드 외부): `<div className="admin-filter-wrapper">`
+- 필터 wrapper (카드 내부): `<div className="flex gap-2 items-center w-full mt-2">`
+- 페이징: `<div className="admin-table-spacing">`
+
+## EAV 패턴 및 데이터 관리 전략
+
+### 개요
+
+**Type/Attribute는 스키마 정의용, BusinessObject.data(JSON)는 실제 데이터 저장용**
+
+### 아키텍처
+
+#### 1. 메타데이터 계층 (스키마 정의)
+- **Type**: 비즈니스 객체 타입 정의 (예: Invoice, Contract)
+- **Attribute**: 공통 속성 정의 (예: invoiceNumber, customerName)
+- **TypeAttribute**: Type과 Attribute의 연결 (Many-to-Many)
+
+#### 2. 데이터 계층 (실제 인스턴스)
+- **BusinessObject**: 비즈니스 객체 인스턴스
+  - `typeId`: 어떤 Type인지 참조 (스키마 정의)
+  - `data`: 실제 속성 값을 JSON으로 저장 (PostgreSQL JSONB)
+  - ❌ **BusinessAttribute 테이블 제거됨** (EAV 방식 대신 JSON 사용)
+
+### JSON 방식의 장점
+
+| 항목 | EAV (BusinessAttribute) | JSON (data 필드) |
+|------|-------------------------|------------------|
+| 구조 | 복잡 (JOIN 필요) | ✅ 간단 (1행) |
+| 성능 | 느림 (N개 행) | ✅ 빠름 |
+| 쿼리 | 어려움 | ✅ JSONB 함수 활용 |
+| 스키마 검증 | Type/Attribute | ✅ 동일하게 지원 |
+
+### 사용 예시
+
+```typescript
+// 1. Type/Attribute 정의 (스키마)
+const invoiceType = await prisma.type.create({
+  data: { name: 'Invoice', description: '송장 문서 타입' },
+})
+
+const attr = await prisma.attribute.create({
+  data: {
+    key: 'invoiceNumber',
+    label: '송장 번호',
+    description: '고유 송장 식별 번호',
+    attrType: 'STRING',
+    isRequired: true,
+  },
+})
+
+await prisma.typeAttribute.create({
+  data: { typeId: invoiceType.id, attributeId: attr.id },
+})
+
+// 2. BusinessObject 생성 (data 필드에 JSON)
+const invoice = await prisma.businessObject.create({
+  data: {
+    typeId: invoiceType.id,
+    policyId: 'policy1',
+    currentState: 'Draft',
+    description: '2024년 11월 송장',
+    data: {
+      invoiceNumber: 'INV-2024-001',
+      customerName: 'ABC 주식회사',
+      totalAmount: 5000000,
+      isPaid: false,
+    },
+  },
+})
+
+// 3. 조회 및 검증
+const obj = await prisma.businessObject.findUnique({
+  where: { id: invoice.id },
+  include: {
+    type: {
+      include: {
+        typeAttributes: {
+          include: { attribute: true },
+        },
+      },
+    },
+  },
+})
+
+// 스키마 정의 확인
+obj.type.typeAttributes.forEach((ta) => {
+  console.log(`${ta.attribute.label}: ${ta.attribute.attrType}`)
+})
+
+// 실제 데이터 사용
+const data = obj.data as Record<string, any>
+console.log(data.invoiceNumber)  // 'INV-2024-001'
+```
+
+### PostgreSQL JSONB 쿼리 예시
+
+```sql
+-- 특정 속성 값으로 검색
+SELECT * FROM "BusinessObject" 
+WHERE data->>'invoiceNumber' = 'INV-2024-001';
+
+-- 숫자 범위 검색
+SELECT * FROM "BusinessObject" 
+WHERE (data->>'totalAmount')::int > 1000000;
+
+-- JSONB 인덱스 생성 (성능 최적화)
+CREATE INDEX idx_business_object_data ON "BusinessObject" USING GIN (data);
+```
+
+---
+
+## BusinessObject 리비전 자동 할당 시스템
+
+### 개요
+
+BusinessObject의 리비전을 Policy 기반으로 자동 할당하는 시스템입니다.
+
+**핵심 개념:**
+- **Policy**: `revisionSequence` 필드로 리비전 순서 정의 (예: "A,B,C")
+- **Type**: 계층 구조 지원, 속성 상속 (`prefix`, `name`)
+- **BusinessObject**: `typeId + policyId + name + revision` 조합으로 자동 관리
+
+### 데이터 모델
+
+#### Policy
+
+```prisma
+model Policy {
+  id               String   @id @default(cuid())
+  name             String
+  version          Int      @default(1)
+  revisionSequence String   @default("A,B,C")  // 리비전 순서
+  
+  types    Type[]
+  businessObjects  BusinessObject[]
+}
+```
+
+#### Type
+
+```prisma
+model Type {
+  id       String   @id @default(cuid())
+  type     String   @unique           // 고유 타입 (예: "invoice")
+  name     String?                    // 사용자 친화적 이름 (상속 가능)
+  prefix   String?                    // 접두사 (예: "INV", 상속 가능)
+  
+  policyId String
+  policy   Policy   @relation(fields: [policyId], references: [id])
+  
+  // 계층 구조
+  parentId String?
+  parent   Type? @relation("TypeHierarchy", fields: [parentId], references: [id])
+  children Type[] @relation("TypeHierarchy")
+  
+  objects  BusinessObject[] @relation("TypeObjects")
+}
+```
+
+#### BusinessObject
+
+```prisma
+model BusinessObject {
+  id             String   @id @default(cuid())
+  typeId String?
+  name           String?           // "송장-2025-001"
+  revision       String?           // "A", "B", "C"
+  policyId       String
+  
+  type Type? @relation("TypeObjects", fields: [typeId], references: [id])
+  policy       Policy        @relation(fields: [policyId], references: [id])
+  
+  @@unique([typeId, name, revision])           // 이름 + 리비전 유니크
+}
+```
+
+### 자동 할당 로직
+
+**Prisma Middleware** (`src/lib/prisma/middleware.ts`):
+
+1. **policyId 자동 할당**: Type의 policyId 사용
+2. **name 자동 생성**: `prefix-timestamp-random` (예: `INV-20251102-042`)
+3. **revision 순환**: Policy의 `revisionSequence`에 따라 A → B → C → A...
+
+```typescript
+// 사용 예시
+const obj = await prisma.businessObject.create({
+  data: {
+    typeId: 'type1',
+    name: '송장-001',  // 또는 생략 시 자동 생성
+    currentState: 'draft',
+  },
+})
+// 자동 할당: { policyId: 'p1', revision: 'A' }
+```
+
+### 속성 상속
+
+**유틸리티 함수** (`src/lib/business-type-utils.ts`):
+
+```typescript
+import { getInheritedTypeAttributes } from '@/lib/business-type-utils'
+
+const attrs = await getInheritedTypeAttributes(typeId)
+// 결과: { prefix: 'INV', name: '일반 송장' }
+// prefix/name이 없으면 부모로부터 재귀적으로 상속
+```
+
+### 계층 구조
+
+```
+Type (type: "document", prefix: "DOC")
+└── Type (type: "invoice", prefix: "INV")
+    └── Type (type: "tax-invoice", prefix: null)  // 부모로부터 "INV" 상속
+```
+
+### 마이그레이션
+
+**파일**: `prisma/migrations/add_business_type_revision.sql`
+
+```bash
+# Supabase SQL Editor에서 실행
+psql $DATABASE_URL -f prisma/migrations/add_business_type_revision.sql
+
+# Prisma Client 재생성
+npx prisma generate
+```
+
+### 주의사항
+
+1. **유니크 제약**: 동일 `typeId + name + revision` 조합은 중복 생성 불가 (동일 name으로 여러 revision은 가능)
+2. **revision 순환**: Policy의 `revisionSequence` 변경 시 기존 데이터 검증 필요
+3. **속성 상속**: `prefix`, `name`이 없으면 부모 Type에서 조회
+
+### 성능 최적화
+
+```prisma
+@@index([typeId, policyId, name, revision])  // 복합 인덱스
+```
+
+최신 revision 조회 시 빠른 성능 보장.
+
+### 관련 문서
+
+- `BUSINESS_OBJECT_REVISION.md`: 상세 설명 및 사용 예시
+- `prisma/schema.prisma`: 전체 스키마 정의
+- `src/lib/prisma/middleware.ts`: 자동 할당 로직
+- `src/lib/business-type-utils.ts`: 유틸리티 함수
+
+---
+
+## 다크모드 및 테마
+
+- **라이브러리**: next-themes
+- **설정**: 
+  - `<ThemeProvider attribute="class" defaultTheme="system" enableSystem>`
+  - `suppressHydrationWarning` on `<html>` tag
+- **토글**: AdminLayout 상단 헤더 (Moon/Sun 아이콘)
+- **색상**: Tailwind CSS 변수 기반 (`hsl(var(--primary))`)
+
+## Design Template 페이지
+
+- **경로**: `/admin/design-template`
+- **위치**: Help 메뉴 → Design Template 하위 메뉴
+- **목적**: 모든 UI 컴포넌트 스타일 가이드
+- **레이아웃**: `admin-page-container` + `admin-list-wrapper` 사용, 스크롤 가능
+- **탭 구성**:
+  1. **Buttons** - 모든 variants, sizes, states
+  2. **Inputs** - Input (text, email, password, number, file), Textarea, Select, Checkbox, Radio Group, Date Picker, Calendar
+  3. **Badges** - Badge variants, Alert variants
+  4. **Tables** - BusinessObject 스타일 테이블 (ScrollableTable)
+  5. **Menus** - DropdownMenu, Pagination
+  6. **Dialogs** - Drawer, Color Palette, Typography
+  7. **Advanced** - Accordion, Tooltip, Toggle, Toggle Group, Switch, Progress, Slider, Separator, Skeleton
+- **주의사항**: Calendar/Toggle-Group 컴포넌트의 CSS 변수 구문 (`--spacing(var(--gap))`, `size-(--cell-size)`) 사용 금지, 표준 Tailwind 클래스 사용 (예: `gap-1`, `size-9`)
+
+## 문서 구조
+
+### user_scenario/ (사용자 시나리오 및 테스트)
+- **USER_SCENARIO_TEST.md**: 7개 시나리오, 20개 단계, 42개 스크린샷
+- **TEST_CHECKLIST.md**: 113개 테스트 항목
+- **TEST_REPORT.md**: 자동화 테스트 결과 (100% 통과) ⭐
+- **UI_COMPONENTS.md**: UI 컴포넌트 레퍼런스
+- **screenshots/**: 테스트 스크린샷 폴더
+- **업데이트**: 시나리오 수정 요청 시 문서 자동 업데이트
+
+### docs/ (기술 문서)
+- **database/DATABASE_MODEL_GUIDE.md**: 통합 데이터베이스 가이드 ⭐
+- **api/**: API 가이드
+- **testing/**: 테스트 가이드 (13개)
+- **auth/**: 인증 가이드 (2개)
+- **ui/**: UI/UX 가이드 (8개)
+- **setup/**: 환경 설정 (4개)
+- **archive/**: 아카이브 (4개)
+
+## Policy 삭제 제약
+
+- **onDelete**: `Restrict` (Cascade에서 변경)
+- **종속 데이터 확인**:
+  - State 존재 시 → 삭제 필요
+  - Type 존재 시 → 삭제 또는 다른 Policy로 변경
+  - BusinessObject 존재 시 → 삭제 또는 Type 변경
+- **삭제 버튼**: 종속 데이터 있으면 비활성화
 
 ## 참고사항
 

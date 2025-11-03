@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
 import { ScrollableTable } from '@/components/ui/scrollable-table'
 import { StateDialog } from './StateDialog'
 import { DeleteStateDialog } from './DeleteStateDialog'
@@ -32,7 +33,6 @@ type State = {
   policy: {
     id: string
     name: string
-    version: number
   }
   _count?: {
     permissions: number
@@ -44,7 +44,6 @@ type State = {
 type Policy = {
   id: string
   name: string
-  version: number
 }
 
 export function StateList({
@@ -77,33 +76,23 @@ export function StateList({
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-shrink-0 mb-2">
-        <Button onClick={handleCreate}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          새 State 생성
-        </Button>
+    <div className="flex flex-col h-full mt-2.5">
+      {/* 헤더 카드: 타이틀 + 설명 + 버튼 */}
+      <div className="admin-header-wrapper">
+        <Card>
+          <CardContent className="admin-header-card-content">
+            <h1 className="text-lg font-bold tracking-tight">State 관리</h1>
+            <p className="text-sm text-muted-foreground">Policy별 상태를 정의하고 관리합니다</p>
+            <div className="flex-1" />
+            <Button onClick={handleCreate}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              새 State 생성
+            </Button>
+          </CardContent>
+        </Card>
       </div>
 
-      <ScrollableTable
-        header={
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>이름</TableHead>
-                <TableHead>설명</TableHead>
-                <TableHead className="w-48">Policy</TableHead>
-                <TableHead className="w-20">순서</TableHead>
-                <TableHead className="w-24">초기</TableHead>
-                <TableHead className="w-24">최종</TableHead>
-                <TableHead className="w-28">권한</TableHead>
-                <TableHead className="w-28">전이</TableHead>
-                <TableHead className="w-40">작업</TableHead>
-              </TableRow>
-            </TableHeader>
-          </Table>
-        }
-      >
+      <ScrollableTable>
         <Table>
           <TableHeader>
             <TableRow>
@@ -134,7 +123,7 @@ export function StateList({
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">
-                      {state.policy.name} v{state.policy.version}
+                      {state.policy.name}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-center">{state.order}</TableCell>

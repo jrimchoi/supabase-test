@@ -253,10 +253,10 @@ await validateAttribute('dueDate', '2024-12-31') // ✅ OK
 
 ## 🔗 다른 테이블과의 관계
 
-### BusinessType → BusinessObject → Attributes
+### Type → BusinessObject → Attributes
 
 ```
-BusinessType (예: "Contract")
+Type (예: "Contract")
     ↓
 BusinessObject (예: "계약서-001")
     ↓

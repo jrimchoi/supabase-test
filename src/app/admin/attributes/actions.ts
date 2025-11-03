@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma'
 export async function createAttribute(data: {
   key: string
   label: string
+  description?: string | null
   attrType: string
   isRequired: boolean
   defaultValue?: string | null

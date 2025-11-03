@@ -8,6 +8,8 @@ describe('EAV 패턴 통합 테스트', () => {
   let createdType: any
   let createdAttributes: any[] = []
   let createdObjects: any[] = []
+  let attrTimestamp: number
+  let businessObject: any
 
   // 테스트 후 정리
   // afterAll(async () => {
@@ -44,38 +46,43 @@ describe('EAV 패턴 통합 테스트', () => {
     createdPolicy = await prisma.policy.create({
       data: {
         name: `Test_Invoice_Policy_${Date.now()}`,
-        version: 1,
+        revisionSequence: 'A,B,C',
         isActive: true,
       },
     })
-    console.log(`   ✅ Policy: ${createdPolicy.name} (${createdPolicy.id})\n`)
+    console.log(`   ✅ Policy: ${createdPolicy.name} (${createdPolicy.id})`)
+    console.log(`   ✅ Revision Sequence: ${createdPolicy.revisionSequence}\n`)
 
     // ============================================
     // 2. Type 생성
     // ============================================
     console.log('2️⃣ Type 생성 중...')
+    const typeTimestamp = Date.now()
     createdType = await prisma.type.create({
       data: {
-        name: `Invoice_${Date.now()}`,
-        policyId: createdPolicy.id,
+        type: `invoice_${typeTimestamp}`,        // 고유 타입 식별자 (필수)
+        name: `Invoice_${typeTimestamp}`,        // 사용자 친화적 이름
+        prefix: 'INV',                           // 접두사
+        policyId: createdPolicy.id,              // Policy 직접 참조
       },
     })
-    console.log(`   ✅ Type: ${createdType.name} (${createdType.id})\n`)
+    console.log(`   ✅ Type: ${createdType.name} (${createdType.id})`)
+    console.log(`   ✅ policyId: ${createdType.policyId} (Policy 직접 참조)\n`)
 
     // ============================================
     // 3. Attribute 정의 (속성 스키마)
     // ============================================
     console.log('3️⃣ Attribute 정의 중 (공통)...')
-    const timestamp = Date.now()
+    attrTimestamp = Date.now()
     const attributeDefs = [
-      { key: `invoiceNumber_${timestamp}`, label: '송장 번호', attrType: 'STRING', isRequired: true },
-      { key: `customerName_${timestamp}`, label: '고객명', attrType: 'STRING', isRequired: true },
-      { key: `totalAmount_${timestamp}`, label: '총 금액', attrType: 'INTEGER', isRequired: true },
-      { key: `unitPrice_${timestamp}`, label: '단가', attrType: 'REAL', isRequired: false },
-      { key: `issueDate_${timestamp}`, label: '발행일', attrType: 'DATE', isRequired: true },
-      { key: `dueDate_${timestamp}`, label: '마감일', attrType: 'DATE', isRequired: false },
-      { key: `isPaid_${timestamp}`, label: '결제 완료', attrType: 'BOOLEAN', isRequired: false },
-      { key: `metadata_${timestamp}`, label: '메타데이터', attrType: 'JSON', isRequired: false },
+      { key: `invoiceNumber_${attrTimestamp}`, label: '송장 번호', attrType: 'STRING', isRequired: true },
+      { key: `customerName_${attrTimestamp}`, label: '고객명', attrType: 'STRING', isRequired: true },
+      { key: `totalAmount_${attrTimestamp}`, label: '총 금액', attrType: 'INTEGER', isRequired: true },
+      { key: `unitPrice_${attrTimestamp}`, label: '단가', attrType: 'REAL', isRequired: false },
+      { key: `issueDate_${attrTimestamp}`, label: '발행일', attrType: 'DATE', isRequired: true },
+      { key: `dueDate_${attrTimestamp}`, label: '마감일', attrType: 'DATE', isRequired: false },
+      { key: `isPaid_${attrTimestamp}`, label: '결제 완료', attrType: 'BOOLEAN', isRequired: false },
+      { key: `metadata_${attrTimestamp}`, label: '메타데이터', attrType: 'JSON', isRequired: false },
     ]
 
     // Attribute 생성 (공통 속성, typeId 없음)
@@ -106,48 +113,41 @@ describe('EAV 패턴 통합 테스트', () => {
     console.log(`   ✅ ${createdAttributes.length}개 Attribute를 Type에 할당 완료\n`)
 
     // ============================================
-    // 4. BusinessObject 생성
+    // 4. BusinessObject 생성 (data 필드에 JSON으로 저장)
     // ============================================
-    console.log('4️⃣ BusinessObject 생성 중...')
-    const businessObject = await prisma.businessObject.create({
+    console.log('4️⃣ BusinessObject 생성 중 (data 필드에 JSON 저장)...')
+    
+    // Type/Attribute 스키마에 맞춰 데이터 구성
+    const businessObjectData = {
+      [`invoiceNumber_${attrTimestamp}`]: 'INV-2024-001',
+      [`customerName_${attrTimestamp}`]: 'ABC 주식회사',
+      [`totalAmount_${attrTimestamp}`]: 5000000,
+      [`unitPrice_${attrTimestamp}`]: 125000.50,
+      [`issueDate_${attrTimestamp}`]: '2024-01-01',
+      [`dueDate_${attrTimestamp}`]: '2024-12-31',
+      [`isPaid_${attrTimestamp}`]: false,
+      [`metadata_${attrTimestamp}`]: { department: 'Sales', priority: 'high', tags: ['urgent', 'Q4'] },
+    }
+
+    businessObject = await prisma.businessObject.create({
       data: {
         typeId: createdType.id,
         policyId: createdPolicy.id,
         currentState: 'Draft',
+        data: businessObjectData,
       },
     })
     createdObjects.push(businessObject)
     console.log(`   ✅ BusinessObject: ${businessObject.id}`)
-    console.log(`   ✅ State: ${businessObject.currentState}\n`)
-
-    // ============================================
-    // 5. BusinessAttribute 값 설정 (EAV)
-    // ============================================
-    console.log('5️⃣ BusinessAttribute 값 설정 중 (EAV)...')
-    const attributeValues = [
-      { attributeKey: `invoiceNumber_${timestamp}`, valueString: 'INV-2024-001' },
-      { attributeKey: `customerName_${timestamp}`, valueString: 'ABC 주식회사' },
-      { attributeKey: `totalAmount_${timestamp}`, valueInteger: 5000000 },
-      { attributeKey: `unitPrice_${timestamp}`, valueReal: 125000.50 },
-      { attributeKey: `issueDate_${timestamp}`, valueDate: new Date('2024-01-01') },
-      { attributeKey: `dueDate_${timestamp}`, valueDate: new Date('2024-12-31') },
-      { attributeKey: `isPaid_${timestamp}`, valueBoolean: false },
-      { attributeKey: `metadata_${timestamp}`, valueJson: { department: 'Sales', priority: 'high', tags: ['urgent', 'Q4'] } },
-    ]
-
-    for (const attrValue of attributeValues) {
-      await prisma.businessAttribute.create({
-        data: {
-          objectId: businessObject.id,
-          ...attrValue,
-        },
-      })
-      
-      const value = attrValue.valueString || attrValue.valueInteger || attrValue.valueReal || 
-                    attrValue.valueDate || attrValue.valueBoolean || JSON.stringify(attrValue.valueJson)
-      console.log(`   ✅ ${attrValue.attributeKey}: ${value}`)
-    }
-    console.log(`   총 ${attributeValues.length}개 속성 값 설정 완료\n`)
+    console.log(`   ✅ State: ${businessObject.currentState}`)
+    console.log(`   ✅ Data: ${Object.keys(businessObjectData).length}개 속성 저장 (JSON)\n`)
+    
+    // 저장된 데이터 확인
+    Object.entries(businessObjectData).forEach(([key, value]) => {
+      const displayValue = typeof value === 'object' ? JSON.stringify(value) : value
+      console.log(`      ${key}: ${displayValue}`)
+    })
+    console.log()
 
     // ============================================
     // 6. 완전한 객체 조회 및 검증
@@ -159,7 +159,7 @@ describe('EAV 패턴 통합 테스트', () => {
       include: {
         type: {
           include: {
-            policy: true,
+            policy: true,  // Type이 직접 Policy 참조
             typeAttributes: {
               include: {
                 attribute: true,
@@ -168,7 +168,6 @@ describe('EAV 패턴 통합 테스트', () => {
           },
         },
         policy: true,
-        attributes: true,
       },
     })
 
@@ -176,24 +175,25 @@ describe('EAV 패턴 통합 테스트', () => {
     console.log('📋 조회 결과')
     console.log('==============================================\n')
     console.log(`BusinessObject ID: ${fullObject?.id}`)
-    console.log(`Type: ${fullObject?.type.name}`)
-    console.log(`Policy: ${fullObject?.policy.name} v${fullObject?.policy.version}`)
+    console.log(`Type: ${fullObject?.type?.type} (${fullObject?.type?.name})`)
+    console.log(`Type의 Policy: ${fullObject?.type?.policy.name} v${fullObject?.type?.policy.version}`)
+    console.log(`BusinessObject의 Policy: ${fullObject?.policy.name} v${fullObject?.policy.version}`)
     console.log(`Current State: ${fullObject?.currentState}`)
     console.log(`\n속성 정의 (Attribute Schema):`)
     fullObject?.type.typeAttributes.forEach((ta, index) => {
       console.log(`  ${index + 1}. ${ta.attribute.label} (${ta.attribute.key}): ${ta.attribute.attrType}${ta.attribute.isRequired ? ' [필수]' : ''}`)
     })
     
-    console.log(`\n속성 값 (BusinessAttribute - EAV):`)
-    fullObject?.attributes.forEach((attr, index) => {
-      const value = attr.valueString || attr.valueInteger || attr.valueReal || 
-                    attr.valueDate?.toISOString() || attr.valueBoolean || 
-                    JSON.stringify(attr.valueJson)
-      console.log(`  ${index + 1}. ${attr.attributeKey}: ${value}`)
-    })
+    console.log(`\n속성 값 (data 필드 - JSON):`)
+    if (fullObject?.data && typeof fullObject.data === 'object') {
+      Object.entries(fullObject.data as Record<string, any>).forEach(([key, value], index) => {
+        const displayValue = typeof value === 'object' ? JSON.stringify(value) : value
+        console.log(`  ${index + 1}. ${key}: ${displayValue}`)
+      })
+    }
     
     console.log('\n==============================================')
-    console.log('✅ EAV 패턴 통합 테스트 완료!')
+    console.log('✅ EAV 패턴 (JSON 방식) 통합 테스트 완료!')
     console.log('==============================================\n')
 
     // ============================================
@@ -203,23 +203,15 @@ describe('EAV 패턴 통합 테스트', () => {
     expect(fullObject?.type.name).toBe(createdType.name)
     expect(fullObject?.policy.id).toBe(createdPolicy.id)
     expect(fullObject?.type.typeAttributes).toHaveLength(8) // 8개 Attribute 정의
-    expect(fullObject?.attributes).toHaveLength(8) // 8개 실제 값
+    expect(fullObject?.data).toBeDefined()
 
-    // 각 타입별 값 검증
-    const invoiceNumber = fullObject?.attributes.find(a => a.attributeKey === `invoiceNumber_${timestamp}`)
-    expect(invoiceNumber?.valueString).toBe('INV-2024-001')
-
-    const totalAmount = fullObject?.attributes.find(a => a.attributeKey === `totalAmount_${timestamp}`)
-    expect(totalAmount?.valueInteger).toBe(5000000)
-
-    const unitPrice = fullObject?.attributes.find(a => a.attributeKey === `unitPrice_${timestamp}`)
-    expect(unitPrice?.valueReal).toBe(125000.50)
-
-    const isPaid = fullObject?.attributes.find(a => a.attributeKey === `isPaid_${timestamp}`)
-    expect(isPaid?.valueBoolean).toBe(false)
-
-    const metadata = fullObject?.attributes.find(a => a.attributeKey === `metadata_${timestamp}`)
-    expect(metadata?.valueJson).toHaveProperty('department', 'Sales')
+    // JSON data 필드 값 검증
+    const data = fullObject?.data as Record<string, any>
+    expect(data[`invoiceNumber_${attrTimestamp}`]).toBe('INV-2024-001')
+    expect(data[`totalAmount_${attrTimestamp}`]).toBe(5000000)
+    expect(data[`unitPrice_${attrTimestamp}`]).toBe(125000.50)
+    expect(data[`isPaid_${attrTimestamp}`]).toBe(false)
+    expect(data[`metadata_${attrTimestamp}`]).toHaveProperty('department', 'Sales')
 
     console.log('✅ 모든 검증 통과!\n')
   })
@@ -228,21 +220,21 @@ describe('EAV 패턴 통합 테스트', () => {
     console.log('\n📊 State 전환 테스트')
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
 
-    // Given: 객체가 이미 생성되어 있음
-    const currentObject = createdObjects[0]
-    console.log(`현재 State: ${currentObject.currentState}`)
+    // Given: 첫 번째 테스트에서 생성된 객체 사용
+    expect(businessObject).toBeDefined()
+    console.log(`현재 State: ${businessObject.currentState}`)
 
     // When: State 전환 (Draft → Review)
     console.log('State 전환 중: Draft → Review')
     const updated = await prisma.businessObject.update({
-      where: { id: currentObject.id },
+      where: { id: businessObject.id },
       data: { currentState: 'Review' },
     })
 
     // Then: 검증
     console.log(`새 State: ${updated.currentState}`)
     expect(updated.currentState).toBe('Review')
-    expect(updated.id).toBe(currentObject.id)
+    expect(updated.id).toBe(businessObject.id)
     
     console.log('✅ State 전환 성공!\n')
   })

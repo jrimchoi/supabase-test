@@ -1,102 +1,94 @@
 import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
-import { getServerSupabase } from '@/lib/supabase/server'
 import { GroupDetail } from '@/components/admin/groups/GroupDetail'
 import { notFound } from 'next/navigation'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 type Params = { params: Promise<{ id: string }> }
 
-async function getGroupWithUsers(id: string) {
-  const group = await prisma.group.findUnique({
+async function getGroupWithDetails(id: string) {
+  const groupData = await prisma.group.findUnique({
     where: { id },
     include: {
-      parent: { select: { id: true, name: true } },
-      userGroups: { select: { id: true, userId: true } },
-      _count: { select: { children: true, permissions: true, userGroups: true } },
+      parent: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      userGroups: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              full_name: true,
+              name: true,
+              avatar_url: true,
+            },
+          },
+        },
+      },
+      _count: {
+        select: {
+          permissions: true,
+          userGroups: true,
+          children: true,
+        },
+      },
     },
   })
 
-  if (!group) return null
+  if (!groupData) return null
 
-  // Supabase에서 사용자 정보 가져오기
-  const supabase = await getServerSupabase()
-  const userIds = group.userGroups.map((ug) => ug.userId)
+  // userGroups를 users 형태로 변환
+  const users = groupData.userGroups.map((ug) => ug.user)
 
-  let users: any[] = []
-  if (userIds.length > 0) {
-    // UUID 형식 검증 (Supabase는 UUID 타입만 지원)
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-    const validUuids = userIds.filter(id => uuidRegex.test(id))
-    const invalidIds = userIds.filter(id => !uuidRegex.test(id))
-    
-    console.log('🔍 UUID 형식:', validUuids)
-    console.log('⚠️  문자열 형식:', invalidIds)
-    
-    // UUID만 Supabase에서 조회
-    let profiles: any[] = []
-    if (validUuids.length > 0) {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, email, full_name, name, avatar_url')
-        .in('id', validUuids)
-      
-      if (error) {
-        console.error('❌ Supabase 에러:', error)
-      }
-      
-      profiles = data || []
-    }
-    
-    // 모든 사용자 ID를 순서대로 매핑
-    users = userIds.map(id => {
-      // UUID면 profiles에서 찾기
-      if (uuidRegex.test(id)) {
-        const profile = profiles.find(u => u.id === id)
-        // profiles에 없으면 기본 정보로 표시
-        return profile || {
-          id,
-          email: `${id.slice(0, 8)}...`,
-          full_name: `사용자 (${id.slice(0, 8)})`,
-          name: id.slice(0, 8),
-          avatar_url: null,
-        }
-      } else {
-        // 문자열 ID는 기본 정보로 표시
-        return {
-          id,
-          email: id,
-          full_name: id,
-          name: id,
-          avatar_url: null,
-        }
-      }
-    })
-    
-    console.log('✅ 최종 users 배열:', users.length, users)
+  return {
+    ...groupData,
+    users,
   }
-
-  return { ...group, users }
 }
 
 export default async function GroupDetailPage({ params }: Params) {
   const { id } = await params
-  const groupData = await getGroupWithUsers(id)
+  const groupData = await getGroupWithDetails(id)
 
   if (!groupData) notFound()
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">{groupData.name}</h1>
-        <p className="text-muted-foreground mt-2">{groupData.description || 'Group 설명이 없습니다'}</p>
+    <div className="admin-page-container">
+      <div className="admin-list-wrapper">
+        {/* 헤더 카드: 타이틀 + 정보 */}
+        <div className="admin-header-wrapper">
+          <Card>
+            <CardContent className="admin-header-card-content">
+              <h1 className="text-lg font-bold tracking-tight">Group 상세</h1>
+              <p className="text-sm text-muted-foreground">{groupData.name}</p>
+              <div className="flex-1" />
+              <div className="flex items-center gap-2">
+                {groupData.parent && (
+                  <>
+                    <span className="text-xs text-muted-foreground">부모:</span>
+                    <Badge variant="outline" className="text-xs">{groupData.parent.name}</Badge>
+                  </>
+                )}
+                <Badge variant={groupData.isActive ? "default" : "secondary"} className="text-xs">
+                  {groupData.isActive ? '활성' : '비활성'}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Suspense fallback={<div>로딩 중...</div>}>
+          <GroupDetail group={groupData} />
+        </Suspense>
       </div>
-      <Suspense fallback={<div>로딩 중...</div>}>
-        <GroupDetail group={groupData} />
-      </Suspense>
     </div>
   )
 }
-

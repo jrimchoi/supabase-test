@@ -584,7 +584,7 @@ fullObject.data.attributes.forEach(attr => {
 
 | 항목 | V1 (이전) | V2 (현재) |
 |------|----------|----------|
-| **타입** | BusinessType (독립) | Type (Policy FK) |
+| **타입** | Type (독립) | Type (Policy FK) |
 | **속성 정의** | BusinessAttribute | Attribute (Type FK) |
 | **속성 값** | - | BusinessAttribute (EAV) |
 | **객체** | BusinessObject (단순) | BusinessObject (Type, Policy FK) |

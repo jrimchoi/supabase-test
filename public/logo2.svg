@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="220" height="64" viewBox="0 0 220 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 배경 원형 그라데이션 (팀 협업) -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4A90E2"/>
+      <stop offset="100%" stop-color="#50C878"/>
+    </linearGradient>
+  </defs>
+  <circle cx="32" cy="32" r="30" fill="url(#bgGradient)" stroke="#2E6BB8" stroke-width="2"/>
+
+  <!-- 팀원 아이콘 (3명, 원형 배치) -->
+  <g transform="translate(18, 16)">
+    <!-- Person 1 -->
+    <circle cx="6" cy="6" r="5" fill="white"/>
+    <path d="M6 9C4 9 2 10 2 12H10C10 10 8 9 6 9Z" fill="white"/>
+    <!-- Person 2 -->
+    <circle cx="18" cy="6" r="5" fill="white"/>
+    <path d="M18 9C16 9 14 10 14 12H22C22 10 20 9 18 9Z" fill="white"/>
+    <!-- Person 3 -->
+    <circle cx="12" cy="14" r="5" fill="white"/>
+    <path d="M12 17C10 17 8 18 8 20H16C16 18 14 17 12 17Z" fill="white"/>
+  </g>
+
+  <!-- 워크플로우 순환 화살표 -->
+  <path d="M36 36L40 32L44 36" fill="none" stroke="#FFD700" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M40 32L40 28" fill="none" stroke="#FFD700" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M40 28C40 26 42 24 44 24C46 24 48 26 48 28" fill="none" stroke="#FFD700" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M48 28L46 26L46 30" fill="none" stroke="#FFD700" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- 정책 문서 미니 아이콘 -->
+  <rect x="12" y="46" width="12" height="10" rx="1" fill="white" opacity="0.8"/>
+  <path d="M14 49H18" stroke="#4A90E2" stroke-width="1" stroke-linecap="round"/>
+  <path d="M14 51H20" stroke="#4A90E2" stroke-width="1" stroke-linecap="round"/>
+
+  <!-- 텍스트: Team Flow -->
+  <text x="74" y="42" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="bold" fill="#1a1a1a">
+    Team Flow
+  </text>
+
+  <!-- 서브타이틀 (선택적) -->
+  <text x="74" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#666666">
+    Policy-based Workflow
+  </text>
+</svg>

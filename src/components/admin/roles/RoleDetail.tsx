@@ -70,7 +70,8 @@ export function RoleDetail({ role }: { role: RoleData }) {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="flex-1 min-h-0 overflow-y-auto pb-5 pr-1">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* 왼쪽: Role 정보 & 할당된 사용자 */}
       <div className="space-y-6">
         {/* Role 속성 */}
@@ -129,6 +130,7 @@ export function RoleDetail({ role }: { role: RoleData }) {
             />
           </CardContent>
         </Card>
+      </div>
       </div>
     </div>
   )

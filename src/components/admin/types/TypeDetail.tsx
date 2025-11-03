@@ -11,7 +11,7 @@ import { assignAttributeToType, unassignAttributeFromType } from '@/app/admin/at
 
 type Attribute = {
   id: string
-  key: string
+  name: string
   label: string
   attrType: string
   isRequired: boolean
@@ -27,17 +27,23 @@ type TypeAttribute = {
 type TypeData = {
   id: string
   name: string
-  policyId: string
+  description?: string | null
   createdAt: Date
   policy: {
     id: string
     name: string
-    version: number
   }
+  policyTypes: {
+    id: string
+    policy: {
+      id: string
+      name: string
+    }
+  }[]
   typeAttributes: TypeAttribute[]
   _count: {
     typeAttributes: number
-    instances: number
+    objects: number
   }
 }
 
@@ -72,7 +78,8 @@ export function TypeDetail({ type }: { type: TypeData }) {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="flex-1 min-h-0 overflow-y-auto pb-5 pr-1">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* 왼쪽: Type 정보 & Attribute 리스트 */}
       <div className="space-y-6">
         {/* Type 정보 */}
@@ -85,11 +92,31 @@ export function TypeDetail({ type }: { type: TypeData }) {
               <span className="text-sm text-muted-foreground">이름</span>
               <span className="font-medium">{type.name}</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Policy</span>
+            {type.description && (
+              <div className="flex justify-between items-start">
+                <span className="text-sm text-muted-foreground">설명</span>
+                <span className="text-sm text-right max-w-xs">{type.description}</span>
+              </div>
+            )}
+            <div className="flex justify-between items-start">
+              <span className="text-sm text-muted-foreground">기본 Policy (리비전용)</span>
               <Badge variant="outline">
-                {type.policy.name} v{type.policy.version}
+                {type.policy.name}
               </Badge>
+            </div>
+            <div className="flex justify-between items-start">
+              <span className="text-sm text-muted-foreground">연결된 Policy</span>
+              <div className="flex flex-wrap gap-1 justify-end">
+                {type.policyTypes.length > 0 ? (
+                  type.policyTypes.map((pt) => (
+                    <Badge key={pt.id} variant="secondary">
+                      {pt.policy.name}
+                    </Badge>
+                  ))
+                ) : (
+                  <span className="text-xs text-muted-foreground">없음</span>
+                )}
+              </div>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Attribute 수</span>
@@ -97,7 +124,7 @@ export function TypeDetail({ type }: { type: TypeData }) {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Instance 수</span>
-              <span className="font-medium">{type._count.instances}</span>
+              <span className="font-medium">{type._count.objects}</span>
             </div>
           </CardContent>
         </Card>
@@ -127,7 +154,7 @@ export function TypeDetail({ type }: { type: TypeData }) {
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground font-mono mt-1">
-                        {ta.attribute.key}
+                        {ta.attribute.name}
                       </p>
                       <div className="flex gap-2 mt-2">
                         <Badge variant="outline" className="text-xs">
@@ -170,6 +197,7 @@ export function TypeDetail({ type }: { type: TypeData }) {
             />
           </CardContent>
         </Card>
+      </div>
       </div>
     </div>
   )

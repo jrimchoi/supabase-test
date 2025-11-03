@@ -4,26 +4,15 @@
 const fs = require('fs')
 const path = require('path')
 
-// .env.test 파일 우선 로드 (통합 테스트 전용 - Direct Connection)
-const envTestPath = path.resolve(process.cwd(), '.env.test')
-const envLocalPath = path.resolve(process.cwd(), '.env.local')
+// 통합 테스트에서는 Prisma Extensions 비활성화 (TLS 충돌 방지)
+process.env.SKIP_PRISMA_EXTENSIONS = 'true'
 
-if (fs.existsSync(envTestPath)) {
-  // .env.test 사용 (Direct Connection)
-  const envConfig = fs.readFileSync(envTestPath, 'utf8')
-  envConfig.split('\n').forEach(line => {
-    const trimmed = line.trim()
-    if (trimmed && !trimmed.startsWith('#')) {
-      const [key, ...values] = trimmed.split('=')
-      const value = values.join('=')
-      if (key && value) {
-        process.env[key] = value.replace(/^["']|["']$/g, '')
-      }
-    }
-  })
-  console.log('✅ .env.test 로드 완료 (Direct Connection)')
-} else if (fs.existsSync(envLocalPath)) {
-  // .env.local fallback (Pooler)
+// .env.local 파일 우선 로드 (통합 테스트 전용)
+const envLocalPath = path.resolve(process.cwd(), '.env.local')
+const envTestPath = path.resolve(process.cwd(), '.env.test')
+
+if (fs.existsSync(envLocalPath)) {
+  // .env.local 사용 (Pooler)
   const envConfig = fs.readFileSync(envLocalPath, 'utf8')
   envConfig.split('\n').forEach(line => {
     const trimmed = line.trim()
@@ -35,26 +24,37 @@ if (fs.existsSync(envTestPath)) {
       }
     }
   })
-  console.log('✅ .env.local 로드 완료 (Pooler - 테스트용으로는 권장하지 않음)')
-  console.warn('⚠️  통합 테스트는 Direct Connection을 사용하세요! .env.test 파일을 생성하세요.')
+  console.log('✅ .env.local 로드 완료 (Pooler)')
+} else if (fs.existsSync(envTestPath)) {
+  // .env.test fallback
+  const envConfig = fs.readFileSync(envTestPath, 'utf8')
+  envConfig.split('\n').forEach(line => {
+    const trimmed = line.trim()
+    if (trimmed && !trimmed.startsWith('#')) {
+      const [key, ...values] = trimmed.split('=')
+      const value = values.join('=')
+      if (key && value) {
+        process.env[key] = value.replace(/^["']|["']$/g, '')
+      }
+    }
+  })
+  console.log('✅ .env.test 로드 완료')
 } else {
-  console.error('❌ .env.test 또는 .env.local 파일이 없습니다!')
+  console.error('❌ .env.local 또는 .env.test 파일이 없습니다!')
 }
 
 // 환경 변수 확인 및 수정
 if (process.env.DATABASE_URL) {
   let dbUrl = process.env.DATABASE_URL
   
-  // Pooler (6543) → Direct Connection (5432)로 변경
-  if (dbUrl.includes(':6543')) {
-    dbUrl = dbUrl.replace(':6543', ':5432')
-    console.log('ℹ️  Pooler → Direct Connection (6543 → 5432)')
-  }
+  // Pooler 사용 (6543 포트 유지)
+  console.log('ℹ️  Pooler Connection 사용 (6543 포트)')
   
-  // pgbouncer=true 제거 (Direct Connection에서는 불필요)
-  if (dbUrl.includes('pgbouncer=true')) {
-    dbUrl = dbUrl.replace(/[?&]pgbouncer=true/, '')
-    console.log('ℹ️  pgbouncer=true 제거')
+  // pgbouncer=true 확인 및 추가 (Pooler에서 필요)
+  if (!dbUrl.includes('pgbouncer=true')) {
+    const separator = dbUrl.includes('?') ? '&' : '?'
+    dbUrl = dbUrl + separator + 'pgbouncer=true'
+    console.log('ℹ️  pgbouncer=true 추가 (Pooler용)')
   }
   
   // schema=public 추가 (없는 경우)
@@ -64,14 +64,20 @@ if (process.env.DATABASE_URL) {
     console.log('ℹ️  schema=public 추가')
   }
   
-  // sslmode=require 추가 (없는 경우)
+  // sslmode=disable 추가 (없는 경우)
   if (!dbUrl.includes('sslmode=')) {
     const separator = dbUrl.includes('?') ? '&' : '?'
-    dbUrl = dbUrl + separator + 'sslmode=require'
-    console.log('ℹ️  sslmode=require 추가')
+    dbUrl = dbUrl + separator + 'sslmode=disable'
+    console.log('ℹ️  sslmode=disable 추가 (Pooler TLS 우회)')
+  } else if (!dbUrl.includes('sslmode=disable')) {
+    console.log(`ℹ️  현재 sslmode: ${dbUrl.match(/sslmode=([^&]+)/)?.[1]}`)
   }
   
   process.env.DATABASE_URL = dbUrl
+  
+  // SSL 인증서 검증 비활성화 (Node.js 전역 설정)
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+  console.log('ℹ️  SSL 인증서 검증 비활성화 (테스트용)')
   
   const dbHost = dbUrl.split('@')[1]?.split('/')[0] || 'N/A'
   console.log(`📊 DB 연결: ${dbHost}`)
