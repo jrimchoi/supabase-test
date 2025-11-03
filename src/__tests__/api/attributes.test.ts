@@ -21,7 +21,7 @@ describe('Attribute API', () => {
       const mockAttributes = [
         {
           id: 'attr-1',
-          key: 'amount',
+          name: 'amount',
           label: '금액',
           attrType: 'INTEGER',
           isRequired: true,
@@ -31,7 +31,7 @@ describe('Attribute API', () => {
         },
         {
           id: 'attr-2',
-          key: 'dueDate',
+          name: 'dueDate',
           label: '마감일',
           attrType: 'DATE',
           isRequired: false,
@@ -56,7 +56,7 @@ describe('Attribute API', () => {
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
       expect(data.data).toHaveLength(2)
-      expect(data.data[0].key).toBe('amount')
+      expect(data.data[0].name).toBe('amount')
     })
 
     it('typeId로 필터링해야 함 (TypeAttribute 사용)', async () => {
@@ -69,7 +69,7 @@ describe('Attribute API', () => {
           createdAt: new Date(),
           attribute: {
             id: 'attr-1',
-            key: 'title',
+            name: 'title',
             label: '제목',
             attrType: 'STRING',
             isRequired: true,
@@ -93,7 +93,7 @@ describe('Attribute API', () => {
 
       // Then
       expect(response.status).toBe(200)
-      expect(data.data[0].key).toBe('title')
+      expect(data.data[0].name).toBe('title')
     })
   })
 
@@ -101,7 +101,7 @@ describe('Attribute API', () => {
     it('새로운 공통 Attribute를 생성해야 함', async () => {
       // Given
       const newAttribute = {
-        key: 'amount',
+        name: 'amount',
         label: '금액',
         attrType: 'INTEGER',
         isRequired: true,
@@ -130,7 +130,7 @@ describe('Attribute API', () => {
       // Then
       expect(response.status).toBe(201)
       expect(data.success).toBe(true)
-      expect(data.data.key).toBe('amount')
+      expect(data.data.name).toBe('amount')
       expect(data.data.attrType).toBe('INTEGER')
     })
 
@@ -139,7 +139,7 @@ describe('Attribute API', () => {
       const request = createMockRequest({
         method: 'POST',
         url: '/api/attributes',
-        body: { key: 'amount' }, // label, attrType 누락
+        body: { name: 'amount' }, // label, attrType 누락
       })
 
       // When
@@ -157,7 +157,7 @@ describe('Attribute API', () => {
         method: 'POST',
         url: '/api/attributes',
         body: {
-          key: 'test',
+          name: 'test',
           label: '테스트',
           attrType: 'INVALID',
         },
@@ -178,7 +178,7 @@ describe('Attribute API', () => {
       // Given
       const updatedAttribute = {
         id: 'attr-123',
-        key: 'amount',
+        name: 'amount',
         label: '총 금액',
         attrType: 'REAL',
         isRequired: true,
@@ -213,7 +213,7 @@ describe('Attribute API', () => {
       // Given
       prismaMock.attribute.delete.mockResolvedValue({
         id: 'attr-123',
-        key: 'amount',
+        name: 'amount',
         label: '금액',
         attrType: 'INTEGER',
         isRequired: false,

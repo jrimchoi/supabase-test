@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useMemo } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -15,15 +15,10 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { ScrollableTable } from '@/components/ui/scrollable-table'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { ClientPagination } from '@/components/ui/client-pagination'
+import { useClientPagination } from '@/hooks/useClientPagination'
 import { TypeDialog } from './TypeDialog'
-import { PlusCircle, Edit, Trash2, GitBranch, ChevronLeft, ChevronRight } from 'lucide-react'
+import { PlusCircle, Edit, Trash2, GitBranch } from 'lucide-react'
 import { deleteType } from '@/app/admin/types/actions'
 
 type TypeListItem = {
@@ -57,23 +52,10 @@ export function TypeList({
   const [selectedType, setSelectedType] = useState<TypeListItem | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(20)
   const router = useRouter()
 
-  // 페이징 처리 (클라이언트 사이드)
-  const { paginatedTypes, totalPages } = useMemo(() => {
-    const start = (currentPage - 1) * pageSize
-    const end = start + pageSize
-    const paginated = initialTypes.slice(start, end)
-    const total = Math.ceil(initialTypes.length / pageSize)
-    return { paginatedTypes: paginated, totalPages: total }
-  }, [initialTypes, currentPage, pageSize])
-
-  const handlePageSizeChange = (value: string) => {
-    setPageSize(value === 'all' ? initialTypes.length : parseInt(value, 10))
-    setCurrentPage(1)
-  }
+  // 페이징 훅 사용
+  const pagination = useClientPagination(initialTypes, { initialPageSize: 20 })
 
   const handleCreate = () => {
     setSelectedType(null)
@@ -135,7 +117,7 @@ export function TypeList({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedTypes.map((type) => (
+            {pagination.paginatedData.map((type) => (
               <TableRow key={type.id}>
                 <TableCell>
                   <div className="flex items-center gap-2">
@@ -213,50 +195,17 @@ export function TypeList({
         </Table>
       </ScrollableTable>
 
-      {/* 페이징 */}
-      <div className="admin-table-spacing flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          총 {initialTypes.length}개 중 {(currentPage - 1) * pageSize + 1}-
-          {Math.min(currentPage * pageSize, initialTypes.length)}개 표시
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          
-          <span className="text-sm">
-            {currentPage} / {totalPages}
-          </span>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
-          <SelectTrigger className="w-32">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="10">10개씩</SelectItem>
-            <SelectItem value="20">20개씩</SelectItem>
-            <SelectItem value="50">50개씩</SelectItem>
-            <SelectItem value="100">100개씩</SelectItem>
-            <SelectItem value="all">전체</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <ClientPagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalCount={pagination.totalCount}
+        pageSize={pagination.pageSize}
+        onPreviousPage={pagination.goToPreviousPage}
+        onNextPage={pagination.goToNextPage}
+        onPageSizeChange={pagination.handlePageSizeChange}
+        canGoPrevious={pagination.canGoPrevious}
+        canGoNext={pagination.canGoNext}
+      />
 
       <TypeDialog
         type={selectedType}

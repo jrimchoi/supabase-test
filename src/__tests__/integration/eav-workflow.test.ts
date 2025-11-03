@@ -60,13 +60,14 @@ describe('EAV 패턴 통합 테스트', () => {
     const typeTimestamp = Date.now()
     createdType = await prisma.type.create({
       data: {
-        type: `invoice_${typeTimestamp}`,        // 고유 타입 식별자 (필수)
-        name: `Invoice_${typeTimestamp}`,        // 사용자 친화적 이름
+        name: `invoice_${typeTimestamp}`,        // 고유 타입 식별자 (필수)
+        description: `Invoice_${typeTimestamp}`, // 사용자 친화적 설명
         prefix: 'INV',                           // 접두사
         policyId: createdPolicy.id,              // Policy 직접 참조
       },
+
     })
-    console.log(`   ✅ Type: ${createdType.name} (${createdType.id})`)
+    console.log(`   ✅ Type: ${createdType.description || createdType.name} (${createdType.id})`)
     console.log(`   ✅ policyId: ${createdType.policyId} (Policy 직접 참조)\n`)
 
     // ============================================
@@ -75,28 +76,28 @@ describe('EAV 패턴 통합 테스트', () => {
     console.log('3️⃣ Attribute 정의 중 (공통)...')
     attrTimestamp = Date.now()
     const attributeDefs = [
-      { key: `invoiceNumber_${attrTimestamp}`, label: '송장 번호', attrType: 'STRING', isRequired: true },
-      { key: `customerName_${attrTimestamp}`, label: '고객명', attrType: 'STRING', isRequired: true },
-      { key: `totalAmount_${attrTimestamp}`, label: '총 금액', attrType: 'INTEGER', isRequired: true },
-      { key: `unitPrice_${attrTimestamp}`, label: '단가', attrType: 'REAL', isRequired: false },
-      { key: `issueDate_${attrTimestamp}`, label: '발행일', attrType: 'DATE', isRequired: true },
-      { key: `dueDate_${attrTimestamp}`, label: '마감일', attrType: 'DATE', isRequired: false },
-      { key: `isPaid_${attrTimestamp}`, label: '결제 완료', attrType: 'BOOLEAN', isRequired: false },
-      { key: `metadata_${attrTimestamp}`, label: '메타데이터', attrType: 'JSON', isRequired: false },
+      { name: `invoiceNumber_${attrTimestamp}`, label: '송장 번호', attrType: 'STRING', isRequired: true },
+      { name: `customerName_${attrTimestamp}`, label: '고객명', attrType: 'STRING', isRequired: true },
+      { name: `totalAmount_${attrTimestamp}`, label: '총 금액', attrType: 'INTEGER', isRequired: true },
+      { name: `unitPrice_${attrTimestamp}`, label: '단가', attrType: 'REAL', isRequired: false },
+      { name: `issueDate_${attrTimestamp}`, label: '발행일', attrType: 'DATE', isRequired: true },
+      { name: `dueDate_${attrTimestamp}`, label: '마감일', attrType: 'DATE', isRequired: false },
+      { name: `isPaid_${attrTimestamp}`, label: '결제 완료', attrType: 'BOOLEAN', isRequired: false },
+      { name: `metadata_${attrTimestamp}`, label: '메타데이터', attrType: 'JSON', isRequired: false },
     ]
 
     // Attribute 생성 (공통 속성, typeId 없음)
     for (const attrDef of attributeDefs) {
       const attr = await prisma.attribute.create({
         data: {
-          key: attrDef.key,
+          name: attrDef.name,
           label: attrDef.label,
           attrType: attrDef.attrType as any,
           isRequired: attrDef.isRequired,
         },
       })
       createdAttributes.push(attr)
-      console.log(`   ✅ ${attrDef.label} (${attrDef.key}): ${attrDef.attrType}${attrDef.isRequired ? ' [필수]' : ''}`)
+      console.log(`   ✅ ${attrDef.label} (${attrDef.name}): ${attrDef.attrType}${attrDef.isRequired ? ' [필수]' : ''}`)
     }
     console.log(`   총 ${createdAttributes.length}개 Attribute 정의 완료`)
 
@@ -175,13 +176,13 @@ describe('EAV 패턴 통합 테스트', () => {
     console.log('📋 조회 결과')
     console.log('==============================================\n')
     console.log(`BusinessObject ID: ${fullObject?.id}`)
-    console.log(`Type: ${fullObject?.type?.type} (${fullObject?.type?.name})`)
-    console.log(`Type의 Policy: ${fullObject?.type?.policy.name} v${fullObject?.type?.policy.version}`)
-    console.log(`BusinessObject의 Policy: ${fullObject?.policy.name} v${fullObject?.policy.version}`)
+    console.log(`Type: ${fullObject?.type?.name} (${fullObject?.type?.description || '-'})`)
+    console.log(`Type의 Policy: ${fullObject?.type?.policy.name}`)
+    console.log(`BusinessObject의 Policy: ${fullObject?.policy.name}`)
     console.log(`Current State: ${fullObject?.currentState}`)
     console.log(`\n속성 정의 (Attribute Schema):`)
     fullObject?.type.typeAttributes.forEach((ta, index) => {
-      console.log(`  ${index + 1}. ${ta.attribute.label} (${ta.attribute.key}): ${ta.attribute.attrType}${ta.attribute.isRequired ? ' [필수]' : ''}`)
+      console.log(`  ${index + 1}. ${ta.attribute.label} (${ta.attribute.name}): ${ta.attribute.attrType}${ta.attribute.isRequired ? ' [필수]' : ''}`)
     })
     
     console.log(`\n속성 값 (data 필드 - JSON):`)

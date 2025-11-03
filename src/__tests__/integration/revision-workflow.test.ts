@@ -35,26 +35,26 @@ describe('리비전 자동 할당 통합 테스트', () => {
     // 부모 타입
     const parentType = await prisma.type.create({
       data: {
-        type: `document_${Date.now()}`,
-        name: '문서',
+        name: `document_${Date.now()}`,
+        description: '문서',
         prefix: 'DOC',
         policyId: createdPolicy.id,
       },
     })
-    console.log(`   ✅ 부모 타입: ${parentType.name} (${parentType.type})`)
+    console.log(`   ✅ 부모 타입: ${parentType.description || parentType.name} (${parentType.name})`)
     console.log(`      prefix: ${parentType.prefix}`)
 
     // 자식 타입 (상속 테스트)
     createdType = await prisma.type.create({
       data: {
-        type: `invoice_${Date.now()}`,
-        name: '송장',
+        name: `invoice_${Date.now()}`,
+        description: '송장',
         prefix: 'INV',
         policyId: createdPolicy.id,
         parentId: parentType.id,
       },
     })
-    console.log(`   ✅ 자식 타입: ${createdType.name} (${createdType.type})`)
+    console.log(`   ✅ 자식 타입: ${createdType.description || createdType.name} (${createdType.name})`)
     console.log(`      prefix: ${createdType.prefix}`)
     console.log(`      parentId: ${createdType.parentId}\n`)
 
@@ -245,8 +245,8 @@ describe('리비전 자동 할당 통합 테스트', () => {
     // Given: prefix가 없는 자식 타입 생성
     const childType = await prisma.type.create({
       data: {
-        type: `tax_invoice_${Date.now()}`,
-        name: '세금 계산서',
+        name: `tax_invoice_${Date.now()}`,
+        description: '세금 계산서',
         prefix: null,  // prefix 없음 (부모로부터 상속)
         policyId: createdPolicy.id,
         parentId: createdType.id,  // invoice의 자식
