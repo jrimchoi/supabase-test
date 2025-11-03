@@ -12,9 +12,24 @@ export const metadata = {
 export const revalidate = 10
 
 async function getAllBusinessObjects() {
-  // 모든 데이터 가져오기 (클라이언트에서 페이징)
+  // 최근 200개만 가져오기 (성능 최적화)
+  // 더 많은 데이터가 필요하면 limit을 늘리세요
   const objects = await prisma.businessObject.findMany({
-    include: {
+    take: 200,  // 최근 200개로 제한
+    select: {
+      id: true,
+      typeId: true,
+      name: true,
+      revision: true,
+      policyId: true,
+      currentState: true,
+      description: true,
+      owner: true,
+      createdBy: true,
+      updatedBy: true,
+      data: true,
+      createdAt: true,
+      updatedAt: true,
       type: { select: { id: true, name: true, description: true, prefix: true } },
       policy: { select: { id: true, name: true, revisionSequence: true } },
     },
