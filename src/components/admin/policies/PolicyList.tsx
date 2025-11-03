@@ -24,15 +24,11 @@ import { updatePolicy } from '@/app/admin/policies/actions'
 type Policy = {
   id: string
   name: string
+  description?: string | null
   revisionSequence: string
   isActive: boolean
   createdAt: Date
   updatedAt: Date
-  _count?: {
-    states: number
-    policyTypes: number
-    businessObjects: number
-  }
 }
 
 type Props = Readonly<{
@@ -101,8 +97,6 @@ export function PolicyList({ initialPolicies }: Props) {
               <TableHead>설명</TableHead>
               <TableHead className="w-32">Revision Seq</TableHead>
               <TableHead className="w-24">상태</TableHead>
-              <TableHead className="w-32">State 수</TableHead>
-              <TableHead className="w-32">Type 수</TableHead>
               <TableHead className="w-40">생성일</TableHead>
               <TableHead className="w-40">수정일</TableHead>
               <TableHead className="w-48">작업</TableHead>
@@ -111,7 +105,7 @@ export function PolicyList({ initialPolicies }: Props) {
           <TableBody>
               {initialPolicies.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     등록된 Policy가 없습니다
                   </TableCell>
                 </TableRow>
@@ -120,7 +114,7 @@ export function PolicyList({ initialPolicies }: Props) {
                   <TableRow key={policy.id}>
                     <TableCell className="font-medium">{policy.name}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {(policy as any).description || '-'}
+                      {policy.description || '-'}
                     </TableCell>
                     <TableCell>
                       <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
@@ -135,12 +129,6 @@ export function PolicyList({ initialPolicies }: Props) {
                       >
                         {policy.isActive ? '활성' : '비활성'}
                       </Button>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {policy._count?.states || 0}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {policy._count?.policyTypes || 0}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {format(new Date(policy.createdAt), 'PPP', { locale: ko })}

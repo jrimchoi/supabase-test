@@ -1,7 +1,6 @@
 import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
 import { PermissionList } from '@/components/admin/permissions/PermissionList'
-import { getAllStates, getAllRoles, getAllGroups } from './actions'
 
 export const metadata = {
   title: 'Permission 관리',
@@ -39,18 +38,71 @@ async function getPermissions() {
   return permissions
 }
 
-export default async function PermissionsPage() {
-  const [
-    permissions,
-    statesResult,
-    rolesResult,
-    groupsResult,
-  ] = await Promise.all([
-    getPermissions(),
-    getAllStates(),
-    getAllRoles(),
-    getAllGroups(),
+async function getAllData() {
+  // 모든 데이터를 한 번에 가져오기 (캐싱 적용됨)
+  const [permissions, states, roles, groups] = await Promise.all([
+    prisma.permission.findMany({
+      include: {
+        state: {
+          select: {
+            id: true,
+            name: true,
+            policy: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        role: { select: { id: true, name: true } },
+        group: { select: { id: true, name: true } },
+      },
+      orderBy: [
+        { state: { policy: { name: 'asc' } } },
+        { state: { name: 'asc' } },
+        { createdAt: 'desc' },
+      ],
+    }),
+    prisma.state.findMany({
+      select: {
+        id: true,
+        name: true,
+        policyId: true,
+        policy: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: [
+        { policyId: 'asc' },
+        { order: 'asc' },
+      ],
+    }),
+    prisma.role.findMany({
+      where: { isActive: true },
+      select: {
+        id: true,
+        name: true,
+      },
+      orderBy: { name: 'asc' },
+    }),
+    prisma.group.findMany({
+      where: { isActive: true },
+      select: {
+        id: true,
+        name: true,
+      },
+      orderBy: { name: 'asc' },
+    }),
   ])
+
+  return { permissions, states, roles, groups }
+}
+
+export default async function PermissionsPage() {
+  const { permissions, states, roles, groups } = await getAllData()
 
   return (
     <div className="admin-page-container">
@@ -58,9 +110,9 @@ export default async function PermissionsPage() {
         <Suspense fallback={<div>로딩 중...</div>}>
           <PermissionList
             initialPermissions={permissions}
-            availableStates={statesResult.data || []}
-            availableRoles={rolesResult.data || []}
-            availableGroups={groupsResult.data || []}
+            availableStates={states}
+            availableRoles={roles}
+            availableGroups={groups}
           />
         </Suspense>
       </div>

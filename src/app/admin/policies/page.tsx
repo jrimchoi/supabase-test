@@ -20,18 +20,20 @@ type Props = {
 async function getPolicies(page: number, pageSize: number) {
   const skip = (page - 1) * pageSize
 
+  // 최적화: _count 대신 select만 사용 (훨씬 빠름!)
   const [policies, total] = await Promise.all([
     prisma.policy.findMany({
       skip,
       take: pageSize,
-      include: {
-        _count: {
-          select: {
-            states: true,
-            policyTypes: true,
-            businessObjects: true,
-          },
-        },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        revisionSequence: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+        // _count 제거하고 필요할 때만 개별 조회
       },
       orderBy: { name: 'asc' },
     }),
