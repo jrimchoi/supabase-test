@@ -6,7 +6,6 @@ const withPWA = withPWAInit({
   cacheOnFrontEndNav: true,
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
-  swcMinify: true,
   disable: process.env.NODE_ENV === "development", // 개발 환경에서는 비활성화
   workboxOptions: {
     disableDevLogs: true,
