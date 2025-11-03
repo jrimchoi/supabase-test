@@ -28,6 +28,7 @@ import {
   ChevronDown,
   ChevronRight,
   Database,
+  Table as TableIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -137,6 +138,12 @@ const helpItems: NavItem[] = [
     href: '/admin/query-test',
     icon: Database,
     description: 'DB 쿼리 성능 테스트',
+  },
+  {
+    title: 'Table Spec',
+    href: '/admin/table-spec',
+    icon: TableIcon,
+    description: 'DB 테이블 구조 및 인덱스',
   },
 ]
 

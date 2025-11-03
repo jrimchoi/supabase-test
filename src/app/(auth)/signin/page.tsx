@@ -30,21 +30,35 @@ function SignInContent() {
 		setLoading(true);
 		setMessage(null);
 		try {
+			// localStorage 확인 (before)
+			console.log("🔵 [SIGNIN] localStorage (before):", localStorage.getItem('app-auth')?.slice(0, 50));
+			
 			// 항상 현재 브라우저의 origin 사용 (클라이언트 컴포넌트이므로 가능)
 			const origin = window.location.origin;
 			
 			// redirectTo를 callback URL에 query parameter로 전달
 			const callbackUrl = `${origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`;
+			console.log("🔵 [SIGNIN] callbackUrl:", callbackUrl);
 			logAuth("signInWithProvider", { provider, callbackUrl, finalRedirect: redirectTo });
-			const { error } = await supabase.auth.signInWithOAuth({
+			
+			const { data, error } = await supabase.auth.signInWithOAuth({
 				provider,
 				options: {
 					redirectTo: callbackUrl,
 				},
 			});
+			
+			console.log("🔵 [SIGNIN] signInWithOAuth 응답:", { data, error });
+			
+			// localStorage 확인 (after)
+			const storageAfter = localStorage.getItem('app-auth');
+			console.log("🔵 [SIGNIN] localStorage (after):", storageAfter?.slice(0, 100));
+			console.log("🔵 [SIGNIN] localStorage 저장됨?", !!storageAfter);
+			
 			if (error) throw error;
 		} catch (err: unknown) {
 			const msg = err instanceof Error ? err.message : "로그인에 실패했습니다";
+			console.error("❌ [SIGNIN] 오류:", err);
 			setMessage(msg);
 		} finally {
 			setLoading(false);

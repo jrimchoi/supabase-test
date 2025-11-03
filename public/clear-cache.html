@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>캐시 완전 삭제</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 16px;
+      background: #0070f3;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 10px 0;
+    }
+    button:hover {
+      background: #0051cc;
+    }
+    #log {
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 6px;
+      margin-top: 20px;
+      font-family: monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧹 캐시 완전 삭제</h1>
+  <p>OAuth 로그인 문제 해결을 위해 브라우저 캐시를 완전히 삭제합니다.</p>
+  
+  <button onclick="clearAll()">전체 캐시 삭제</button>
+  <button onclick="testAuth()">캐시 삭제 후 로그인 페이지로</button>
+  
+  <div id="log"></div>
+
+  <script>
+    const log = (msg) => {
+      const logEl = document.getElementById('log');
+      logEl.textContent += msg + '\n';
+      console.log(msg);
+    };
+
+    async function clearAll() {
+      log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      log('🧹 캐시 삭제 시작...');
+      
+      // 1. LocalStorage
+      try {
+        localStorage.clear();
+        log('✅ localStorage 삭제');
+      } catch (e) {
+        log('❌ localStorage 삭제 실패: ' + e.message);
+      }
+      
+      // 2. SessionStorage
+      try {
+        sessionStorage.clear();
+        log('✅ sessionStorage 삭제');
+      } catch (e) {
+        log('❌ sessionStorage 삭제 실패: ' + e.message);
+      }
+      
+      // 3. Service Workers
+      try {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        log(`📦 Service Workers: ${registrations.length}개 발견`);
+        for (const registration of registrations) {
+          await registration.unregister();
+          log(`✅ Service Worker 삭제: ${registration.scope}`);
+        }
+      } catch (e) {
+        log('❌ Service Worker 삭제 실패: ' + e.message);
+      }
+      
+      // 4. Cache Storage
+      try {
+        const cacheNames = await caches.keys();
+        log(`📦 Caches: ${cacheNames.length}개 발견`);
+        for (const name of cacheNames) {
+          await caches.delete(name);
+          log(`✅ Cache 삭제: ${name}`);
+        }
+      } catch (e) {
+        log('❌ Cache 삭제 실패: ' + e.message);
+      }
+      
+      // 5. Cookies
+      try {
+        const cookies = document.cookie.split(';');
+        log(`🍪 Cookies: ${cookies.length}개 발견`);
+        for (const cookie of cookies) {
+          const name = cookie.split('=')[0].trim();
+          document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+          log(`✅ Cookie 삭제: ${name}`);
+        }
+      } catch (e) {
+        log('❌ Cookie 삭제 실패: ' + e.message);
+      }
+      
+      log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      log('✅ 캐시 삭제 완료!');
+      log('⚠️  페이지를 새로고침하거나 브라우저를 재시작하세요.');
+    }
+
+    async function testAuth() {
+      await clearAll();
+      log('🔄 3초 후 로그인 페이지로 이동...');
+      setTimeout(() => {
+        window.location.href = '/signin';
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
+

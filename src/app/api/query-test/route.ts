@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
   
   try {
     const body = await request.json()
-    const { queryKey, customSql, connectionType = 'default' } = body
+    const { queryKey, customSql, connectionType = 'default', forceIndex = false } = body
 
     let sql: string
     let queryName: string
@@ -137,10 +137,23 @@ export async function POST(request: NextRequest) {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     console.log(`🔍 [Query Test] ${queryName}`)
     console.log(`🔌 [Connection] ${connectionType}`)
+    console.log(`🔑 [Force Index] ${forceIndex ? 'ON (enable_seqscan = OFF)' : 'OFF'}`)
     console.log(`📝 [SQL] ${sql.substring(0, 100)}...`)
+
+    // 인덱스 강제 사용 설정
+    if (forceIndex) {
+      console.log('⚡ [Setting] enable_seqscan = OFF')
+      await prismaClient.$executeRawUnsafe('SET LOCAL enable_seqscan = OFF')
+    }
 
     // 쿼리 실행
     const result = await prismaClient.$queryRawUnsafe(sql)
+
+    // 인덱스 강제 해제
+    if (forceIndex) {
+      console.log('⚡ [Setting] enable_seqscan = ON (복구)')
+      await prismaClient.$executeRawUnsafe('SET LOCAL enable_seqscan = ON')
+    }
 
     // 성능 측정 종료
     const endTime = performance.now()
@@ -158,6 +171,7 @@ export async function POST(request: NextRequest) {
       queryName,
       sql,
       connectionType,
+      forceIndex,
       executionTime: parseFloat(executionTime.toFixed(2)),
       serverExecutionTime,
       resultCount: Array.isArray(result) ? result.length : 1,

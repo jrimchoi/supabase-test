@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
 import { PlayCircle, Loader2, Clock, Database, CheckCircle, Zap } from 'lucide-react'
 import {
   Select,
@@ -19,6 +20,7 @@ type QueryResult = {
   queryName: string
   sql: string
   connectionType?: string
+  forceIndex?: boolean
   executionTime: number
   serverExecutionTime: number
   resultCount: number
@@ -49,6 +51,7 @@ export function QueryTestPanel() {
   const [customSql, setCustomSql] = useState<string>('')
   const [useCustomSql, setUseCustomSql] = useState(false)
   const [connectionType, setConnectionType] = useState<string>('default')
+  const [forceIndex, setForceIndex] = useState<boolean>(false)
   const [isExecuting, setIsExecuting] = useState(false)
   const [result, setResult] = useState<QueryResult | null>(null)
   const [clientTime, setClientTime] = useState<number>(0)
@@ -67,6 +70,7 @@ export function QueryTestPanel() {
           queryKey: useCustomSql ? undefined : selectedQuery,
           customSql: useCustomSql ? customSql : undefined,
           connectionType,
+          forceIndex,
         }),
       })
 
@@ -136,24 +140,46 @@ export function QueryTestPanel() {
             1. Connection Type 선택
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <Select value={connectionType} onValueChange={setConnectionType}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {CONNECTION_TYPES.map((type) => (
-                <SelectItem key={type.value} value={type.value}>
-                  <div className="flex flex-col">
-                    <span className="font-medium">{type.label}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {type.description}
-                    </span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <CardContent className="space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-2 block">Connection Type</label>
+            <Select value={connectionType} onValueChange={setConnectionType}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CONNECTION_TYPES.map((type) => (
+                  <SelectItem key={type.value} value={type.value}>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{type.label}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {type.description}
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="forceIndex"
+              checked={forceIndex}
+              onCheckedChange={(checked) => setForceIndex(checked as boolean)}
+            />
+            <label
+              htmlFor="forceIndex"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+            >
+              인덱스 강제 사용 (SET enable_seqscan = OFF)
+            </label>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            ⚠️ Sequential Scan을 비활성화하고 인덱스를 강제로 사용합니다.
+            <br />
+            데이터가 적을 때는 오히려 느릴 수 있습니다.
+          </p>
         </CardContent>
       </Card>
 
@@ -313,6 +339,13 @@ export function QueryTestPanel() {
                   </Badge>
                 </div>
               )}
+
+              <div>
+                <p className="text-sm font-medium mb-1">인덱스 강제 사용</p>
+                <Badge variant={result.forceIndex ? 'default' : 'secondary'}>
+                  {result.forceIndex ? 'ON (enable_seqscan = OFF)' : 'OFF'}
+                </Badge>
+              </div>
 
               {result.sql && (
                 <div>
