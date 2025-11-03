@@ -7,9 +7,10 @@ export const metadata = {
   description: '비즈니스 객체 인스턴스 관리',
 }
 
-// ISR: 10초 캐싱, 데이터 변경 시 자동 revalidate (자주 변경됨)
-// searchParams 제거로 Static/ISR 가능!
-export const revalidate = 10
+// 🔍 성능 디버깅: 임시로 Dynamic 모드 (매번 로그 출력)
+// 성능 확인 후 다시 revalidate = 10으로 변경!
+export const dynamic = 'force-dynamic'
+// export const revalidate = 10
 
 async function getAllBusinessObjects() {
   const pageStartTime = performance.now()
