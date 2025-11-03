@@ -127,16 +127,16 @@ const navItems: NavItem[] = [
 
 const helpItems: NavItem[] = [
   {
-    title: 'Query Test',
-    href: '/admin/query-test',
-    icon: Database,
-    description: 'DB 쿼리 성능 테스트',
-  },
-  {
     title: 'Design Template',
     href: '/admin/design-template',
     icon: Palette,
     description: 'UI 컴포넌트 스타일 가이드',
+  },
+  {
+    title: 'Query Test',
+    href: '/admin/query-test',
+    icon: Database,
+    description: 'DB 쿼리 성능 테스트',
   },
 ]
 
