@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Table,
@@ -14,9 +14,16 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { ScrollableTable } from '@/components/ui/scrollable-table'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { StateDialog } from './StateDialog'
 import { DeleteStateDialog } from './DeleteStateDialog'
-import { PlusCircle, Edit, Trash2, CheckCircle, Circle } from 'lucide-react'
+import { PlusCircle, Edit, Trash2, CheckCircle, Circle, ChevronLeft, ChevronRight } from 'lucide-react'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 
@@ -58,7 +65,23 @@ export function StateList({
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
   const router = useRouter()
+
+  // 페이징 처리 (클라이언트 사이드)
+  const { paginatedStates, totalPages } = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    const end = start + pageSize
+    const paginated = initialStates.slice(start, end)
+    const total = Math.ceil(initialStates.length / pageSize)
+    return { paginatedStates: paginated, totalPages: total }
+  }, [initialStates, currentPage, pageSize])
+
+  const handlePageSizeChange = (value: string) => {
+    setPageSize(value === 'all' ? initialStates.length : parseInt(value, 10))
+    setCurrentPage(1)
+  }
 
   const handleCreate = () => {
     setSelectedState(null)
@@ -82,7 +105,7 @@ export function StateList({
         <Card>
           <CardContent className="admin-header-card-content">
             <h1 className="text-lg font-bold tracking-tight">State 관리</h1>
-            <p className="text-sm text-muted-foreground">Policy별 상태를 정의하고 관리합니다</p>
+            <p className="text-sm text-muted-foreground">Policy별 상태를 정의하고 관리합니다 (총 {initialStates.length}개)</p>
             <div className="flex-1" />
             <Button onClick={handleCreate}>
               <PlusCircle className="mr-2 h-4 w-4" />
@@ -108,14 +131,14 @@ export function StateList({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {initialStates.length === 0 ? (
+            {paginatedStates.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                   등록된 State가 없습니다
                 </TableCell>
               </TableRow>
             ) : (
-              initialStates.map((state) => (
+              paginatedStates.map((state) => (
                 <TableRow key={state.id}>
                   <TableCell className="font-medium">{state.name}</TableCell>
                   <TableCell className="max-w-xs truncate">
@@ -172,6 +195,51 @@ export function StateList({
           </TableBody>
         </Table>
       </ScrollableTable>
+
+      {/* 페이징 */}
+      <div className="admin-table-spacing flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">
+          총 {initialStates.length}개 중 {(currentPage - 1) * pageSize + 1}-
+          {Math.min(currentPage * pageSize, initialStates.length)}개 표시
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          
+          <span className="text-sm">
+            {currentPage} / {totalPages}
+          </span>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
+          <SelectTrigger className="w-32">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="10">10개씩</SelectItem>
+            <SelectItem value="20">20개씩</SelectItem>
+            <SelectItem value="50">50개씩</SelectItem>
+            <SelectItem value="100">100개씩</SelectItem>
+            <SelectItem value="all">전체</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       <StateDialog
         state={selectedState}

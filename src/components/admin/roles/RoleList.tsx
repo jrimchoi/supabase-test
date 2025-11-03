@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -15,9 +15,16 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { ScrollableTable } from '@/components/ui/scrollable-table'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { RoleDialog } from './RoleDialog'
 import { DeleteRoleDialog } from './DeleteRoleDialog'
-import { PlusCircle, Edit, Trash2 } from 'lucide-react'
+import { PlusCircle, Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { updateRole } from '@/app/admin/roles/actions'
@@ -41,7 +48,23 @@ export function RoleList({ initialRoles }: { initialRoles: Role[] }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
   const router = useRouter()
+
+  // 페이징 처리 (클라이언트 사이드)
+  const { paginatedRoles, totalPages } = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    const end = start + pageSize
+    const paginated = initialRoles.slice(start, end)
+    const total = Math.ceil(initialRoles.length / pageSize)
+    return { paginatedRoles: paginated, totalPages: total }
+  }, [initialRoles, currentPage, pageSize])
+
+  const handlePageSizeChange = (value: string) => {
+    setPageSize(value === 'all' ? initialRoles.length : parseInt(value, 10))
+    setCurrentPage(1)
+  }
 
   const handleCreate = () => {
     setSelectedRole(null)
@@ -84,7 +107,7 @@ export function RoleList({ initialRoles }: { initialRoles: Role[] }) {
         <Card>
           <CardContent className="admin-header-card-content">
             <h1 className="text-lg font-bold tracking-tight">Role 관리</h1>
-            <p className="text-sm text-muted-foreground">사용자 역할을 생성하고 관리합니다</p>
+            <p className="text-sm text-muted-foreground">사용자 역할을 생성하고 관리합니다 (총 {initialRoles.length}개)</p>
             <div className="flex-1" />
             <Button onClick={handleCreate}>
               <PlusCircle className="mr-2 h-4 w-4" />
@@ -109,14 +132,14 @@ export function RoleList({ initialRoles }: { initialRoles: Role[] }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-            {initialRoles.length === 0 ? (
+            {paginatedRoles.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   등록된 Role이 없습니다
                 </TableCell>
               </TableRow>
             ) : (
-              initialRoles.map((role) => (
+              paginatedRoles.map((role) => (
                 <TableRow key={role.id}>
                   <TableCell className="font-medium">
                     <a
@@ -176,6 +199,51 @@ export function RoleList({ initialRoles }: { initialRoles: Role[] }) {
           </TableBody>
         </Table>
       </ScrollableTable>
+
+      {/* 페이징 */}
+      <div className="admin-table-spacing flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">
+          총 {initialRoles.length}개 중 {(currentPage - 1) * pageSize + 1}-
+          {Math.min(currentPage * pageSize, initialRoles.length)}개 표시
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          
+          <span className="text-sm">
+            {currentPage} / {totalPages}
+          </span>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
+          <SelectTrigger className="w-32">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="10">10개씩</SelectItem>
+            <SelectItem value="20">20개씩</SelectItem>
+            <SelectItem value="50">50개씩</SelectItem>
+            <SelectItem value="100">100개씩</SelectItem>
+            <SelectItem value="all">전체</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       <RoleDialog
         role={selectedRole}
