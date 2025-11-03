@@ -23,7 +23,17 @@ export async function middleware(req: NextRequest) {
 		return NextResponse.next();
 	}
 
-	// 세션 체크가 필요한 경로
+	// ⚡ 최적화: RSC 요청은 세션 체크 건너뛰기 (페이지 레벨에서 이미 체크함)
+	// RSC 요청 = 페이지 컴포넌트가 이미 렌더링되었고, 클라이언트 사이드 네비게이션 중
+	const isRSCRequest = req.headers.get('RSC') === '1' || 
+	                      req.nextUrl.searchParams.has('_rsc');
+	
+	if (isRSCRequest) {
+		// RSC 요청은 빠르게 통과 (페이지에서 이미 세션 체크함)
+		return NextResponse.next();
+	}
+
+	// 세션 체크가 필요한 경로 (초기 페이지 로드만)
 	const res = NextResponse.next();
 
 	const supabase = createServerClient(
@@ -47,15 +57,8 @@ export async function middleware(req: NextRequest) {
 	// 세션 체크
 	const { data } = await supabase.auth.getSession();
 
-	console.log('🔒 [MIDDLEWARE]', {
-		path: req.nextUrl.pathname,
-		hasSession: !!data.session,
-		user: data.session?.user?.email || null,
-	});
-
 	// 세션 없으면 로그인 페이지로 리다이렉트
 	if (!data.session) {
-		console.log('🚫 세션 없음! → /signin');
 		const redirectUrl = new URL("/signin", req.url);
 		// 루트(/) 경로가 아닌 경우에만 redirectTo 추가
 		if (req.nextUrl.pathname !== "/") {
@@ -64,7 +67,6 @@ export async function middleware(req: NextRequest) {
 		return NextResponse.redirect(redirectUrl);
 	}
 
-	console.log('✅ 접근 허용');
 	return res;
 }
 
