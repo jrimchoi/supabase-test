@@ -28,7 +28,7 @@ import {
 
 type Type = {
   id: string
-  name: string
+  name: string | null
   description: string | null
   prefix: string | null
   policy: {
@@ -37,7 +37,7 @@ type Type = {
   }
   parent: {
     id: string
-    name: string
+    name: string | null
     description: string | null
   } | null
 }
@@ -100,7 +100,7 @@ export function TypeDialog({
   useEffect(() => {
     if (type) {
       setFormData({
-        name: type.name,
+        name: type.name || '',
         description: type.description || '',
         prefix: type.prefix || '',
         policyId: type.policy.name, // Policy 정보로 표시 (실제로는 ID 필요)

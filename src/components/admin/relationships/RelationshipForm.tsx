@@ -86,10 +86,10 @@ export function RelationshipForm({ relationship }: Props) {
   // 초기 Type 설정
   useEffect(() => {
     if (relationship?.fromType) {
-      setFromTypeSearch(relationship.fromType.name)
+      setFromTypeSearch(relationship.fromType.name || '')
     }
     if (relationship?.toType) {
-      setToTypeSearch(relationship.toType.name)
+      setToTypeSearch(relationship.toType.name || '')
     }
   }, [relationship])
 

@@ -7,52 +7,9 @@ import { Badge } from '@/components/ui/badge'
 import { BusinessObjectDetail, BusinessObjectContext } from './BusinessObjectDetail'
 import { BusinessObjectHeaderActions } from './BusinessObjectHeaderActions'
 import { updateBusinessObject, deleteBusinessObject, getAvailableStates } from '@/app/admin/business-objects/actions'
+import type { BusinessObjectDetail as BusinessObjectDetailType } from '@/types'
 
-type BusinessObjectData = {
-  id: string
-  typeId: string | null
-  name: string | null
-  revision: string | null
-  policyId: string
-  currentState: string
-  description: string | null
-  owner: string | null
-  createdBy: string | null
-  updatedBy: string | null
-  data: unknown
-  createdAt: Date
-  updatedAt: Date
-  type: {
-    id: string
-    name: string | null
-    description: string | null
-    prefix: string | null
-    policy: {
-      id: string
-      name: string
-    }
-    typeAttributes: Array<{
-      id: string
-      attribute: {
-        id: string
-        name: string
-        label: string
-        description: string | null
-        attrType: string
-        isRequired: boolean
-        defaultValue: string | null
-        validation: string | null
-      }
-    }>
-  } | null
-  policy: {
-    id: string
-    name: string
-    revisionSequence: string
-  }
-}
-
-export function BusinessObjectPageClient({ objectData }: { objectData: BusinessObjectData }) {
+export function BusinessObjectPageClient({ objectData }: { objectData: BusinessObjectDetailType }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   

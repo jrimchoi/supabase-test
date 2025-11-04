@@ -7,7 +7,9 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import type { BusinessObjectDetail as BusinessObjectData } from '@/types'
 
+// 로컬 헬퍼 타입 (컴포넌트 내부용)
 type Attribute = {
   id: string
   name: string
@@ -37,38 +39,6 @@ export function useBusinessObjectContext() {
     throw new Error('useBusinessObjectContext must be used within BusinessObjectPageClient')
   }
   return context
-}
-
-type BusinessObjectData = {
-  id: string
-  typeId: string | null
-  name: string | null
-  revision: string | null
-  policyId: string
-  currentState: string
-  description: string | null
-  owner: string | null
-  createdBy: string | null
-  updatedBy: string | null
-  data: unknown
-  createdAt: Date
-  updatedAt: Date
-  type: {
-    id: string
-    name: string | null
-    description: string | null
-    prefix: string | null
-    policy: {
-      id: string
-      name: string
-    }
-    typeAttributes: TypeAttribute[]
-  } | null
-  policy: {
-    id: string
-    name: string
-    revisionSequence: string
-  }
 }
 
 export function BusinessObjectDetail({ 
