@@ -10,19 +10,31 @@ export async function GET(request: NextRequest) {
     const policyId = searchParams.get('policyId')
     const currentState = searchParams.get('currentState')
     const include = searchParams.get('include')
+    const search = searchParams.get('search')
+
+    const where: any = {
+      ...(typeId && { typeId }),
+      ...(policyId && { policyId }),
+      ...(currentState && { currentState }),
+    }
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ]
+    }
 
     const businessObjects = await prisma.businessObject.findMany({
-      where: {
-        ...(typeId && { typeId }),
-        ...(policyId && { policyId }),
-        ...(currentState && { currentState }),
-      },
+      where,
       include: {
         ...(include?.includes('type') && { type: true }),
         ...(include?.includes('policy') && { policy: true }),
         ...(include?.includes('attributes') && { attributes: true }),
+        ...(!include && { type: true }), // 기본적으로 type 포함
       },
       orderBy: { createdAt: 'desc' },
+      take: 50, // 검색 결과 제한
     })
 
     return NextResponse.json({ success: true, data: businessObjects })

@@ -29,6 +29,9 @@ import {
   ChevronRight,
   Database,
   Table as TableIcon,
+  Settings,
+  Link as LinkIcon,
+  Network,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -70,6 +73,15 @@ const navItems: NavItem[] = [
     icon: LayoutDashboard,
     description: '관리자 대시보드',
   },
+  {
+    title: 'Business Objects',
+    href: '/admin/business-objects',
+    icon: Box,
+    description: '비즈니스 객체 관리',
+  },
+]
+
+const adminItems: NavItem[] = [
   {
     title: 'Policies',
     href: '/admin/policies',
@@ -119,10 +131,16 @@ const navItems: NavItem[] = [
     description: '속성 정의 관리',
   },
   {
-    title: 'Business Objects',
-    href: '/admin/business-objects',
-    icon: Box,
-    description: '비즈니스 객체 관리',
+    title: 'Relationships',
+    href: '/admin/relationships',
+    icon: LinkIcon,
+    description: 'Type 간 관계 정의 (카디널리티, 속성)',
+  },
+  {
+    title: 'Object Relations',
+    href: '/admin/business-object-relationships',
+    icon: Network,
+    description: 'BusinessObject 인스턴스 간 실제 관계',
   },
 ]
 
@@ -150,6 +168,7 @@ const helpItems: NavItem[] = [
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
+  const [adminOpen, setAdminOpen] = useState(true)
   const [helpOpen, setHelpOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
@@ -288,6 +307,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
           {/* Navigation */}
           <nav className="flex-1 space-y-1 p-2 overflow-y-auto">
+            {/* 최상위 메뉴 (Dashboard, Business Objects) */}
             {navItems.map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href
@@ -330,6 +350,101 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 </NavTooltip>
               )
             })}
+
+            {/* Admin Menu Section */}
+            <div>
+              {/* Admin Toggle */}
+              <button
+                onClick={() => setAdminOpen(!adminOpen)}
+                className={cn(
+                  'w-full flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-accent text-muted-foreground',
+                  !sidebarOpen && 'justify-center'
+                )}
+              >
+                <Settings className="h-5 w-5 flex-shrink-0" />
+                {sidebarOpen && (
+                  <>
+                    <span className="flex-1 text-sm text-left">Admin</span>
+                    {adminOpen ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4" />
+                    )}
+                  </>
+                )}
+              </button>
+
+              {/* Admin Sub-menu */}
+              {sidebarOpen && adminOpen && (
+                <div className="mt-1 space-y-1 pl-4">
+                  {adminItems.map((item) => {
+                    const Icon = item.icon
+                    const isActive = pathname === item.href
+
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        prefetch={true}
+                        onClick={() => {
+                          if (isMobile) {
+                            setSidebarOpen(false)
+                          }
+                        }}
+                        className={cn(
+                          'flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-accent',
+                          isActive
+                            ? 'bg-accent text-accent-foreground font-medium'
+                            : 'text-muted-foreground'
+                        )}
+                      >
+                        <Icon className="h-4 w-4 flex-shrink-0" />
+                        <div className="flex-1">
+                          <div className="text-sm">{item.title}</div>
+                        </div>
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
+
+              {/* 접힌 상태에서 Admin 메뉴 항목들 */}
+              {!sidebarOpen && (
+                <div className="space-y-1 mt-1">
+                  {adminItems.map((item) => {
+                    const Icon = item.icon
+                    const isActive = pathname === item.href
+
+                    return (
+                      <NavTooltip
+                        key={item.href}
+                        title={item.title}
+                        description={item.description}
+                        show={true}
+                      >
+                        <Link
+                          href={item.href}
+                          prefetch={true}
+                          onClick={() => {
+                            if (isMobile) {
+                              setSidebarOpen(false)
+                            }
+                          }}
+                          className={cn(
+                            'flex items-center justify-center rounded-lg px-3 py-2 transition-all hover:bg-accent',
+                            isActive
+                              ? 'bg-accent text-accent-foreground font-medium'
+                              : 'text-muted-foreground'
+                          )}
+                        >
+                          <Icon className="h-5 w-5 flex-shrink-0" />
+                        </Link>
+                      </NavTooltip>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
           </nav>
 
           {/* Help Menu Section */}

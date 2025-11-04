@@ -8,10 +8,17 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const policyId = searchParams.get('policyId')
     const include = searchParams.get('include')
+    const search = searchParams.get('search')
 
     const where: any = {}
     if (policyId) {
       where.policyId = policyId
+    }
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ]
     }
 
     const includeOptions: any = {}
