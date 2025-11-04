@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { BusinessObjectRelationshipForm } from '@/components/admin/business-relations/BusinessObjectRelationshipForm'
+import { Loading } from '@/components/ui/loading'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -29,7 +30,7 @@ export default async function BusinessObjectRelationshipDetailPage({ params }: P
 
     return (
       <div className="admin-page-container">
-        <Suspense fallback={<div>로딩 중...</div>}>
+        <Suspense fallback={<Loading />}>
           <BusinessObjectRelationshipForm relationships={relationships} />
         </Suspense>
       </div>
@@ -79,7 +80,7 @@ export default async function BusinessObjectRelationshipDetailPage({ params }: P
 
   return (
     <div className="admin-page-container">
-      <Suspense fallback={<div>로딩 중...</div>}>
+      <Suspense fallback={<Loading />}>
         <BusinessObjectRelationshipForm
           objectRelationship={objectRelationship}
           relationships={relationships}

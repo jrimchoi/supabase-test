@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
 import { PolicyList } from '@/components/admin/policies/PolicyList'
+import { Loading } from '@/components/ui/loading'
 
 export const metadata = {
   title: 'Policy 관리',
@@ -49,7 +50,7 @@ export default async function PoliciesPage() {
   return (
     <div className="admin-page-container">
       <div className="flex-1 min-h-0">
-        <Suspense fallback={<div>로딩 중...</div>}>
+        <Suspense fallback={<Loading />}>
           <PolicyList initialPolicies={policies} allTypes={types} />
         </Suspense>
       </div>

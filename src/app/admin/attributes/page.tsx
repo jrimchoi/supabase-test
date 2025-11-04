@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
 import { AttributeList } from '@/components/admin/attributes/AttributeList'
+import { Loading } from '@/components/ui/loading'
 
 export const metadata = { title: 'Attribute 관리' }
 // ISR: 60초 캐싱, 데이터 변경 시 자동 revalidate
@@ -32,7 +33,7 @@ export default async function AttributesPage() {
   return (
     <div className="admin-page-container">
       <div className="flex-1 min-h-0">
-        <Suspense fallback={<div>로딩 중...</div>}>
+        <Suspense fallback={<Loading />}>
           <AttributeList initialAttributes={attributes} />
         </Suspense>
       </div>

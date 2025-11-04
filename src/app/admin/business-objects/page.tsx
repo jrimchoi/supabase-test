@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
 import { BusinessObjectList } from '@/components/admin/business-objects/BusinessObjectList'
+import { Loading } from '@/components/ui/loading'
 
 export const metadata = {
   title: 'BusinessObject 관리',
@@ -54,7 +55,7 @@ export default async function BusinessObjectsPage() {
   return (
     <div className="admin-page-container">
       <div className="flex-1 min-h-0">
-        <Suspense fallback={<div>로딩 중...</div>}>
+        <Suspense fallback={<Loading />}>
           {/* 클라이언트 컴포넌트에서 페이징 처리 */}
           <BusinessObjectList initialObjects={objects} />
         </Suspense>

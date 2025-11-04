@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
 import { TransitionList } from '@/components/admin/transitions/TransitionList'
+import { Loading } from '@/components/ui/loading'
 
 export const metadata = {
   title: 'StateTransition 관리',
@@ -62,7 +63,7 @@ export default async function TransitionsPage() {
   return (
     <div className="admin-page-container">
       <div className="flex-1 min-h-0">
-        <Suspense fallback={<div>로딩 중...</div>}>
+        <Suspense fallback={<Loading />}>
           <TransitionList
             initialTransitions={transitions}
             availableStates={states}

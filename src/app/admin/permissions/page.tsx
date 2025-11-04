@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
 import { PermissionList } from '@/components/admin/permissions/PermissionList'
+import { Loading } from '@/components/ui/loading'
 
 export const metadata = {
   title: 'Permission 관리',
@@ -107,7 +108,7 @@ export default async function PermissionsPage() {
   return (
     <div className="admin-page-container">
       <div className="flex-1 min-h-0">
-        <Suspense fallback={<div>로딩 중...</div>}>
+        <Suspense fallback={<Loading />}>
           <PermissionList
             initialPermissions={permissions}
             availableStates={states}

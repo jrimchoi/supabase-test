@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
 import { BusinessObjectPageClient } from '@/components/admin/business-objects/BusinessObjectPageClient'
+import { Loading } from '@/components/ui/loading'
 import { notFound } from 'next/navigation'
 
 // ISR: 10초 캐싱, 데이터 변경 시 자동 revalidate
@@ -86,7 +87,7 @@ export default async function BusinessObjectDetailPage({ params }: Params) {
 
   return (
     <div className="admin-page-container">
-      <Suspense fallback={<div>로딩 중...</div>}>
+      <Suspense fallback={<Loading />}>
         <BusinessObjectPageClient objectData={objectData} />
       </Suspense>
     </div>

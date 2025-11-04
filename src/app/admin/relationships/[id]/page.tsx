@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { RelationshipForm } from '@/components/admin/relationships/RelationshipForm'
+import { Loading } from '@/components/ui/loading'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -13,7 +14,7 @@ export default async function RelationshipDetailPage({ params }: Props) {
   if (id === 'new') {
     return (
       <div className="admin-page-container">
-        <Suspense fallback={<div>로딩 중...</div>}>
+        <Suspense fallback={<Loading />}>
           <RelationshipForm />
         </Suspense>
       </div>
@@ -51,7 +52,7 @@ export default async function RelationshipDetailPage({ params }: Props) {
 
   return (
     <div className="admin-page-container">
-      <Suspense fallback={<div>로딩 중...</div>}>
+      <Suspense fallback={<Loading />}>
         <RelationshipForm relationship={relationship} />
       </Suspense>
     </div>

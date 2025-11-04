@@ -4,6 +4,7 @@ import { RoleDetail } from '@/components/admin/roles/RoleDetail'
 import { notFound } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Loading } from '@/components/ui/loading'
 
 // ISR: 30초 캐싱, 데이터 변경 시 자동 revalidate
 export const revalidate = 30
@@ -72,7 +73,7 @@ export default async function RoleDetailPage({ params }: Params) {
           </Card>
         </div>
 
-        <Suspense fallback={<div>로딩 중...</div>}>
+        <Suspense fallback={<Loading />}>
           <RoleDetail role={roleData} />
         </Suspense>
       </div>

@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
 import { GroupList } from '@/components/admin/groups/GroupList'
+import { Loading } from '@/components/ui/loading'
 
 export const metadata = {
   title: 'Group 관리',
@@ -52,7 +53,7 @@ export default async function GroupsPage() {
   return (
     <div className="admin-page-container">
       <div className="flex-1 min-h-0">
-        <Suspense fallback={<div>로딩 중...</div>}>
+        <Suspense fallback={<Loading />}>
           <GroupList initialGroups={groups} />
         </Suspense>
       </div>

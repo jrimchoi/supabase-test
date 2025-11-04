@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
 import { StateList } from '@/components/admin/states/StateList'
+import { Loading } from '@/components/ui/loading'
 
 export const metadata = {
   title: 'State 관리',
@@ -55,7 +56,7 @@ export default async function StatesPage() {
   return (
     <div className="admin-page-container">
       <div className="flex-1 min-h-0">
-        <Suspense fallback={<div>로딩 중...</div>}>
+        <Suspense fallback={<Loading />}>
           <StateList initialStates={states} availablePolicies={policies} />
         </Suspense>
       </div>

@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
 import { TypeList } from '@/components/admin/types/TypeList'
+import { Loading } from '@/components/ui/loading'
 
 export const metadata = {
   title: 'Type 관리',
@@ -49,7 +50,7 @@ export default async function TypesPage() {
   return (
     <div className="admin-page-container">
       <div className="flex-1 min-h-0">
-        <Suspense fallback={<div>로딩 중...</div>}>
+        <Suspense fallback={<Loading />}>
           <TypeList initialTypes={types} />
         </Suspense>
       </div>
