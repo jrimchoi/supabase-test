@@ -51,5 +51,8 @@ next-env.d.ts
 # Documentation and guides (local only)
 /markdown
 
-# Prisma files (local only)
-/prisma
+# Prisma migration and SQL files (local only)
+# Keep schema.prisma for production builds
+/prisma/*.sql
+/prisma/migrations/
+/prisma/*.md

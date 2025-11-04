@@ -98,7 +98,6 @@ describe('BusinessObject API (V2)', () => {
       const mockObjects = [
         {
           id: 'obj-1',
-          typeId: null,
           typeId: 'btype-invoice',
           name: '송장-001',
           revision: 'A',

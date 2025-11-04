@@ -1,0 +1,317 @@
+// Prisma Schema for Supabase Test Project
+// Database: PostgreSQL (Supabase)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// Policy 기반 권한 관리 시스템
+// ============================================
+
+model Policy {
+  id               String   @id @default(cuid())
+  name             String
+  description      String?
+  version          Int      @default(1)
+  revisionSequence String   @default("A,B,C")
+  isActive         Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  states      State[]
+  types       Type[]
+  businessObjects BusinessObject[]
+
+  @@map("Policy")
+}
+
+model State {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  policyId    String
+  order       Int      @default(0)
+  isInitial   Boolean  @default(false)
+  isFinal     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  policy              Policy              @relation(fields: [policyId], references: [id], onDelete: Restrict)
+  transitionsFrom     StateTransition[]   @relation("FromState")
+  transitionsTo       StateTransition[]   @relation("ToState")
+  permissions         Permission[]
+  userPermissions     UserPermission[]
+
+  @@map("State")
+}
+
+model StateTransition {
+  id           String   @id @default(cuid())
+  fromStateId  String
+  toStateId    String
+  condition    String?
+  description  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  fromState State @relation("FromState", fields: [fromStateId], references: [id], onDelete: Cascade)
+  toState   State @relation("ToState", fields: [toStateId], references: [id], onDelete: Cascade)
+
+  @@map("StateTransition")
+}
+
+// ============================================
+// Type & Attribute (EAV 패턴 메타데이터)
+// ============================================
+
+model Type {
+  id          String   @id @default(cuid())
+  type        String   @unique
+  name        String?
+  description String?
+  policyId    String
+  prefix      String?
+  parentId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  policy         Policy          @relation(fields: [policyId], references: [id], onDelete: Restrict)
+  parent         Type?           @relation("TypeHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children       Type[]          @relation("TypeHierarchy")
+  typeAttributes TypeAttribute[]
+  objects        BusinessObject[] @relation("TypeObjects")
+  relationshipsFrom Relationship[] @relation("FromType")
+  relationshipsTo   Relationship[] @relation("ToType")
+
+  @@map("Type")
+}
+
+model Attribute {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  label        String
+  description  String?
+  attrType     AttrType
+  isRequired   Boolean  @default(false)
+  defaultValue String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  typeAttributes TypeAttribute[]
+
+  @@map("Attribute")
+}
+
+model TypeAttribute {
+  id          String   @id @default(cuid())
+  typeId      String
+  attributeId String
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  type      Type      @relation(fields: [typeId], references: [id], onDelete: Cascade)
+  attribute Attribute @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+
+  @@unique([typeId, attributeId])
+  @@map("TypeAttribute")
+}
+
+enum AttrType {
+  STRING
+  INTEGER
+  FLOAT
+  BOOLEAN
+  DATE
+  DATETIME
+  JSON
+  TEXT
+}
+
+// ============================================
+// Business Object (실제 데이터)
+// ============================================
+
+model BusinessObject {
+  id           String   @id @default(cuid())
+  typeId       String?
+  policyId     String
+  currentState String
+  name         String?
+  revision     String?
+  description  String?
+  data         Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  type       Type?   @relation("TypeObjects", fields: [typeId], references: [id], onDelete: SetNull)
+  policy     Policy  @relation(fields: [policyId], references: [id], onDelete: Restrict)
+  relationsFrom BusinessObjectRelationship[] @relation("FromObject")
+  relationsTo   BusinessObjectRelationship[] @relation("ToObject")
+
+  @@unique([typeId, name, revision])
+  @@index([policyId])
+  @@index([currentState])
+  @@index([createdAt])
+  @@map("BusinessObject")
+}
+
+// ============================================
+// Relationships (Type & Object Relations)
+// ============================================
+
+model Relationship {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  fromTypeId  String
+  toTypeId    String
+  cardinality Cardinality
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Relations
+  fromType           Type                         @relation("FromType", fields: [fromTypeId], references: [id], onDelete: Cascade)
+  toType             Type                         @relation("ToType", fields: [toTypeId], references: [id], onDelete: Cascade)
+  objectRelationships BusinessObjectRelationship[]
+
+  @@map("Relationship")
+}
+
+model BusinessObjectRelationship {
+  id             String   @id @default(cuid())
+  relationshipId String
+  fromObjectId   String
+  toObjectId     String
+  description    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  relationship Relationship   @relation(fields: [relationshipId], references: [id], onDelete: Cascade)
+  fromObject   BusinessObject @relation("FromObject", fields: [fromObjectId], references: [id], onDelete: Cascade)
+  toObject     BusinessObject @relation("ToObject", fields: [toObjectId], references: [id], onDelete: Cascade)
+
+  @@unique([relationshipId, fromObjectId, toObjectId])
+  @@map("BusinessObjectRelationship")
+}
+
+enum Cardinality {
+  ONE_TO_ONE
+  ONE_TO_MANY
+  MANY_TO_ONE
+  MANY_TO_MANY
+}
+
+// ============================================
+// Role & Group & Permission
+// ============================================
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userRoles UserRole[]
+
+  @@map("Role")
+}
+
+model Group {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userGroups UserGroup[]
+
+  @@map("Group")
+}
+
+model Permission {
+  id         String      @id @default(cuid())
+  stateId    String
+  resource   String
+  action     String
+  targetType TargetType
+  targetId   String?
+  expression String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  // Relations
+  state State @relation(fields: [stateId], references: [id], onDelete: Cascade)
+
+  @@map("Permission")
+}
+
+enum TargetType {
+  user
+  role
+  group
+}
+
+// ============================================
+// User Relations
+// ============================================
+
+model UserRole {
+  id        String   @id @default(cuid())
+  userId    String
+  roleId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("UserRole")
+}
+
+model UserGroup {
+  id        String   @id @default(cuid())
+  userId    String
+  groupId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+  @@map("UserGroup")
+}
+
+model UserPermission {
+  id        String   @id @default(cuid())
+  userId    String
+  stateId   String
+  resource  String
+  action    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  state State @relation(fields: [stateId], references: [id], onDelete: Cascade)
+
+  @@map("UserPermission")
+}

@@ -24,7 +24,7 @@ export function createMockRequest(options: {
     init.body = JSON.stringify(body)
   }
 
-  return new NextRequest(new URL(url, 'http://localhost:3000'), init)
+  return new NextRequest(new URL(url, 'http://localhost:3000'), init as any)
 }
 
 /**

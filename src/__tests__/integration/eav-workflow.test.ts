@@ -181,7 +181,7 @@ describe('EAV 패턴 통합 테스트', () => {
     console.log(`BusinessObject의 Policy: ${fullObject?.policy.name}`)
     console.log(`Current State: ${fullObject?.currentState}`)
     console.log(`\n속성 정의 (Attribute Schema):`)
-    fullObject?.type.typeAttributes.forEach((ta, index) => {
+    fullObject?.type?.typeAttributes.forEach((ta, index) => {
       console.log(`  ${index + 1}. ${ta.attribute.label} (${ta.attribute.name}): ${ta.attribute.attrType}${ta.attribute.isRequired ? ' [필수]' : ''}`)
     })
     
@@ -201,9 +201,9 @@ describe('EAV 패턴 통합 테스트', () => {
     // 7. 검증
     // ============================================
     expect(fullObject).toBeDefined()
-    expect(fullObject?.type.name).toBe(createdType.name)
+    expect(fullObject?.type?.name).toBe(createdType.name)
     expect(fullObject?.policy.id).toBe(createdPolicy.id)
-    expect(fullObject?.type.typeAttributes).toHaveLength(8) // 8개 Attribute 정의
+    expect(fullObject?.type?.typeAttributes).toHaveLength(8) // 8개 Attribute 정의
     expect(fullObject?.data).toBeDefined()
 
     // JSON data 필드 값 검증
