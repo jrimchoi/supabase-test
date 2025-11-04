@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 /**
- * GET /api/business-object-relationships
+ * GET /api/business-relations
  * 모든 BusinessObjectRelationship 조회 (필터링 지원)
  */
 export async function GET(request: NextRequest) {
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
       data: objectRelationships,
     })
   } catch (error: unknown) {
-    console.error('[API] GET /api/business-object-relationships error:', error)
+    console.error('[API] GET /api/business-relations error:', error)
     return NextResponse.json(
       {
         success: false,
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST /api/business-object-relationships
+ * POST /api/business-relations
  * 새로운 BusinessObjectRelationship 생성
  */
 export async function POST(request: NextRequest) {
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     )
   } catch (error: unknown) {
-    console.error('[API] POST /api/business-object-relationships error:', error)
+    console.error('[API] POST /api/business-relations error:', error)
     return NextResponse.json(
       {
         success: false,

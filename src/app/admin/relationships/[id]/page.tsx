@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { RelationshipForm } from '@/components/admin/RelationshipForm'
+import { RelationshipForm } from '@/components/admin/relationships/RelationshipForm'
 
 type Props = {
   params: Promise<{ id: string }>

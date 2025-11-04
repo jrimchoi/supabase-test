@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { RelationshipList } from '@/components/admin/RelationshipList'
+import { RelationshipList } from '@/components/admin/relationships/RelationshipList'
 import { prisma } from '@/lib/prisma'
 
 export const metadata = {
@@ -36,7 +36,7 @@ export default async function RelationshipsPage() {
 
   return (
     <div className="admin-page-container">
-      <div className="flex-1 min-h-0">
+      <div className="admin-list-wrapper">
         <Suspense fallback={<div>로딩 중...</div>}>
           <RelationshipList initialData={relationships} />
         </Suspense>

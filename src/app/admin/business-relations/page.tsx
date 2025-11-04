@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { BusinessObjectRelationshipList } from '@/components/admin/BusinessObjectRelationshipList'
+import { BusinessObjectRelationshipList } from '@/components/admin/business-relations/BusinessObjectRelationshipList'
 import { prisma } from '@/lib/prisma'
 
 export const metadata = {

@@ -138,7 +138,7 @@ const adminItems: NavItem[] = [
   },
   {
     title: 'Object Relations',
-    href: '/admin/business-object-relationships',
+    href: '/admin/business-relations',
     icon: Network,
     description: 'BusinessObject 인스턴스 간 실제 관계',
   },
@@ -283,7 +283,10 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                    height={40}
                    className="rounded-xl shadow-sm flex-shrink-0"
                  />
-                 <h2 className="text-lg font-bold leading-[40px]">Team Workflow</h2>
+                 <div className="flex flex-col justify-center h-[40px]">
+                   <div className="text-lg font-bold leading-tight">Team</div>
+                   <div className="text-lg font-bold leading-tight">Workflow</div>
+                 </div>
                </div>
                 <Button
                   variant="ghost"

@@ -80,18 +80,18 @@ export function BusinessObjectRelationshipList({ initialData }: Props) {
   const [pageSize, setPageSize] = useState(20)
 
   const handleCreate = () => {
-    router.push('/admin/business-object-relationships/new')
+    router.push('/admin/business-relations/new')
   }
 
   const handleEdit = (id: string) => {
-    router.push(`/admin/business-object-relationships/${id}`)
+    router.push(`/admin/business-relations/${id}`)
   }
 
   const handleDelete = async (id: string) => {
     if (!confirm('이 관계 인스턴스를 삭제하시겠습니까?')) return
 
     try {
-      const response = await fetch(`/api/business-object-relationships/${id}`, {
+      const response = await fetch(`/api/business-relations/${id}`, {
         method: 'DELETE',
       })
 

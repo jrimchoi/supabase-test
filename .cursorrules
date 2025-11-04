@@ -17,11 +17,24 @@ src/
     (auth)/              # Route group
       signin/            # 로그인 페이지
     admin/               # 관리자 페이지
+      business-objects/  # BusinessObject 인스턴스 관리
+      business-relations/ # BusinessObject 인스턴스 간 관계
+      relationships/     # Type 간 관계 정의
+      policies/          # Policy 관리
+      states/            # State 관리
+      transitions/       # StateTransition 관리
+      permissions/       # Permission 관리
+      roles/             # Role 관리
+      groups/            # Group 관리
+      types/             # Type 관리
+      attributes/        # Attribute 관리
     api/                 # API Routes
       auth/signout/      # 로그아웃 (Route Handler)
       profile/ensure/    # 프로필 확인/생성
       session/           # JWT 쿠키 저장
       supabase-session/  # Supabase 세션 쿠키 저장
+      business-relations/ # BusinessObject 관계 API
+      relationships/     # Type 관계 API
     auth/                # 인증 관련
       callback/          # OAuth 콜백 (클라이언트 컴포넌트)
       verify/            # 이메일 인증 안내
@@ -31,6 +44,7 @@ src/
     notes/               # RLS 예제
   components/
     ui/                  # shadcn/ui 컴포넌트
+    admin/               # Admin 페이지 컴포넌트
     profiles/            # 프로필 관련 컴포넌트
   lib/
     supabase/
@@ -97,6 +111,98 @@ supabase/               # SQL 스크립트
 - 유틸/라이브러리: camelCase (예: `getServerSupabase()`)
 - Route Handler: `route.ts`
 - 페이지: `page.tsx`
+
+### URL 경로 및 폴더 구조 (Admin 페이지)
+
+#### URL 네이밍
+- **형식**: kebab-case 복수형 사용
+- **예시**:
+  - ✅ `/admin/business-objects` (O)
+  - ✅ `/admin/business-relations` (O) - BusinessObject 인스턴스 간 관계
+  - ✅ `/admin/relationships` (O) - Type 간 관계 정의
+  - ✅ `/admin/permissions` (O)
+  - ❌ `/admin/BusinessObject` (X)
+  - ❌ `/admin/business_object` (X)
+  - ❌ `/admin/business-object-relationships` (X) - 너무 김
+
+#### 폴더 라우팅 구조 (Next.js App Router 표준)
+**모든 Admin 페이지는 다음 폴더 구조를 따릅니다:**
+
+```
+/admin/
+  {resource-name}/        # 리소스 폴더 (kebab-case 복수형)
+    page.tsx              # 리스트 페이지
+    [id]/                 # 동적 라우트
+      page.tsx            # 상세/수정 페이지
+    actions.ts            # Server Actions (optional)
+```
+
+**예시:**
+```
+/admin/business-objects/
+  page.tsx              # BusinessObject 리스트
+  [id]/page.tsx         # BusinessObject 상세
+  actions.ts            # BusinessObject CRUD 서버 액션
+
+/admin/business-relations/
+  page.tsx              # BusinessObjectRelationship 리스트
+  [id]/page.tsx         # BusinessObjectRelationship 상세/수정
+
+/admin/relationships/
+  page.tsx              # Relationship 리스트
+  [id]/page.tsx         # Relationship 상세/수정
+
+/admin/policies/
+  page.tsx              # Policy 리스트
+  [id]/page.tsx         # Policy 상세
+  actions.ts            # Policy CRUD 서버 액션
+```
+
+**일관성 규칙:**
+- ✅ 리스트: `{resource}/page.tsx`
+- ✅ 상세/수정: `{resource}/[id]/page.tsx`
+- ✅ 새로 만들기: 리스트 페이지에서 dialog/drawer 사용 또는 `[id]`에서 처리
+- ✅ Server Actions: `{resource}/actions.ts` (선택적)
+- ❌ `new/page.tsx` 별도 페이지는 사용하지 않음 (dialog 패턴 선호)
+
+#### Components 폴더 구조 (Admin)
+**모든 Admin 컴포넌트는 리소스별 하위 폴더에 배치합니다:**
+
+```
+components/admin/
+  {resource-name}/        # 리소스 폴더 (kebab-case 복수형)
+    {Resource}List.tsx    # 리스트 컴포넌트
+    {Resource}Form.tsx    # 폼 컴포넌트 (생성/수정)
+    {Resource}Dialog.tsx  # Dialog 컴포넌트 (선택적)
+    {Resource}Detail.tsx  # 상세 컴포넌트 (선택적)
+    Delete{Resource}Dialog.tsx  # 삭제 확인 Dialog (선택적)
+```
+
+**예시:**
+```
+components/admin/
+  business-relations/
+    BusinessObjectRelationshipList.tsx
+    BusinessObjectRelationshipForm.tsx
+  relationships/
+    RelationshipList.tsx
+    RelationshipForm.tsx
+  policies/
+    PolicyList.tsx
+    PolicyDialog.tsx
+    PolicyDetail.tsx
+    DeletePolicyDialog.tsx
+  types/
+    TypeList.tsx
+    TypeDialog.tsx
+    TypeDetail.tsx
+    DeleteTypeDialog.tsx
+```
+
+**일관성:**
+- ✅ 폴더명: kebab-case 복수형 (`business-relations/`, `relationships/`)
+- ✅ 컴포넌트명: PascalCase (`BusinessObjectRelationshipList.tsx`)
+- ✅ Import: `@/components/admin/{resource}/{Component}`
 
 ### Import 경로
 - 절대 경로 사용: `@/components/ui/button`
@@ -217,13 +323,20 @@ NEXT_PUBLIC_SITE_URL="http://localhost:3000"  # 개발: localhost, 배포: 실�
   - 저장 시 쉼표로 join하여 저장
   - 조회 시 split하여 여러 개의 Badge로 표시
 
-### 필터링 및 페이징 (Permission, StateTransition 페이지)
+### 필터링 및 페이징 (모든 Admin List 페이지)
 
-- **Policy 검색**: 2자 이상 입력 시 드롭다운으로 검색 결과 표시
 - **클라이언트 사이드 필터링**: 모든 데이터를 먼저 로드하고 클라이언트에서 필터링
 - **클라이언트 사이드 페이징**: 필터링된 데이터 기준으로 클라이언트에서 페이징 처리
+  - `useClientPagination` 훅 사용
+  - `ClientPagination` 컴포넌트 사용
 - **페이지 크기 선택**: 10, 20, 50, 100, 전체 중 선택 가능
+- **필터 버튼**: 
+  - 🔍 Search 아이콘: 필터 적용 표시용 (필터가 있을 때만 활성화)
+  - ✕ XCircle 아이콘: 필터 초기화 (필터가 있을 때만 활성화)
+- **필터 배치**: 타이틀 카드 내부, 타이틀 행 아래에 왼쪽부터 배치
+- **카운터 표시**: "총 X개 / Y개" 형식으로 필터링된 개수 표시
 - 필터 변경 시 자동으로 첫 페이지로 이동
+- **일관성**: 모든 리스트 페이지는 동일한 필터/페이징 패턴 사용
 
 ### 파일 위치
 

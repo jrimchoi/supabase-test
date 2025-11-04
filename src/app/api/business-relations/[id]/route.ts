@@ -6,7 +6,7 @@ type RouteContext = {
 }
 
 /**
- * GET /api/business-object-relationships/:id
+ * GET /api/business-relations/:id
  * 특정 BusinessObjectRelationship 조회
  */
 export async function GET(request: NextRequest, context: RouteContext) {
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       data: objectRelationship,
     })
   } catch (error: unknown) {
-    console.error('[API] GET /api/business-object-relationships/:id error:', error)
+    console.error('[API] GET /api/business-relations/:id error:', error)
     return NextResponse.json(
       {
         success: false,
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 }
 
 /**
- * PATCH /api/business-object-relationships/:id
+ * PATCH /api/business-relations/:id
  * BusinessObjectRelationship 수정
  */
 export async function PATCH(request: NextRequest, context: RouteContext) {
@@ -127,7 +127,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       data: objectRelationship,
     })
   } catch (error: unknown) {
-    console.error('[API] PATCH /api/business-object-relationships/:id error:', error)
+    console.error('[API] PATCH /api/business-relations/:id error:', error)
     return NextResponse.json(
       {
         success: false,
@@ -139,7 +139,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 }
 
 /**
- * DELETE /api/business-object-relationships/:id
+ * DELETE /api/business-relations/:id
  * BusinessObjectRelationship 삭제
  */
 export async function DELETE(request: NextRequest, context: RouteContext) {
@@ -155,7 +155,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       message: 'BusinessObjectRelationship가 삭제되었습니다.',
     })
   } catch (error: unknown) {
-    console.error('[API] DELETE /api/business-object-relationships/:id error:', error)
+    console.error('[API] DELETE /api/business-relations/:id error:', error)
     return NextResponse.json(
       {
         success: false,

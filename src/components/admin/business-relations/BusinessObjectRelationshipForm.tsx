@@ -184,8 +184,8 @@ export function BusinessObjectRelationshipForm({ objectRelationship, relationshi
       }
 
       const url = isNew
-        ? '/api/business-object-relationships'
-        : `/api/business-object-relationships/${objectRelationship.id}`
+        ? '/api/business-relations'
+        : `/api/business-relations/${objectRelationship.id}`
       const method = isNew ? 'POST' : 'PATCH'
 
       const response = await fetch(url, {
@@ -200,7 +200,7 @@ export function BusinessObjectRelationshipForm({ objectRelationship, relationshi
       }
 
       alert(isNew ? '생성되었습니다.' : '수정되었습니다.')
-      router.push('/admin/business-object-relationships')
+      router.push('/admin/business-relations')
       router.refresh()
     } catch (error) {
       alert(error instanceof Error ? error.message : '저장 중 오류가 발생했습니다.')

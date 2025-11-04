@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { PlusCircle, Pencil, Trash2, Search, XCircle } from 'lucide-react'
 import { ScrollableTable } from '@/components/ui/scrollable-table'
+import { ClientPagination } from '@/components/ui/client-pagination'
+import { useClientPagination } from '@/hooks/useClientPagination'
 import {
   Table,
   TableBody,
@@ -90,6 +92,9 @@ export function RelationshipList({ initialData }: Props) {
 
   const hasFilters = nameFilter || fromTypeFilter || toTypeFilter
 
+  // 페이징 훅 사용 (필터링된 데이터)
+  const pagination = useClientPagination(filteredRelationships, { initialPageSize: 20 })
+
   const handleCreate = () => {
     router.push('/admin/relationships/new')
   }
@@ -163,14 +168,14 @@ export function RelationshipList({ initialData }: Props) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredRelationships.length === 0 ? (
+            {pagination.paginatedData.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={11} className="text-center text-muted-foreground">
                   {hasFilters ? '조건에 맞는 관계가 없습니다.' : '관계가 없습니다.'}
                 </TableCell>
               </TableRow>
             ) : (
-              filteredRelationships.map((rel) => (
+              pagination.paginatedData.map((rel) => (
                 <TableRow key={rel.id}>
                   <TableCell className="font-mono">{rel.name}</TableCell>
                   <TableCell>
@@ -241,6 +246,18 @@ export function RelationshipList({ initialData }: Props) {
           </TableBody>
         </Table>
       </ScrollableTable>
+
+      <ClientPagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalCount={pagination.totalCount}
+        pageSize={pagination.pageSize}
+        onPreviousPage={pagination.goToPreviousPage}
+        onNextPage={pagination.goToNextPage}
+        onPageSizeChange={pagination.handlePageSizeChange}
+        canGoPrevious={pagination.canGoPrevious}
+        canGoNext={pagination.canGoNext}
+      />
     </div>
   )
 }
