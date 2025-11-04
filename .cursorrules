@@ -53,13 +53,26 @@ src/
     logger.ts           # 인증 로그 유틸
     utils.ts            # shadcn/ui utils
     prisma.ts           # Prisma Client 싱글턴
-  types/                # 공통 타입 정의 (Prisma Generated Types) ⭐ NEW
+  types/                # 공통 타입 정의 (Prisma Generated Types) ⭐
+    index.ts            # 타입 Export
     business-object.ts  # BusinessObject 관련 타입
     relationship.ts     # Relationship 관련 타입
-    index.ts            # 타입 Export
+    policy.ts           # Policy 관련 타입
+    state.ts            # State 관련 타입
+    type.ts             # Type 관련 타입
+    attribute.ts        # Attribute 관련 타입
+    role.ts             # Role 관련 타입
+    group.ts            # Group 관련 타입
+    permission.ts       # Permission 관련 타입
+    transition.ts       # StateTransition 관련 타입
 middleware.ts           # 세션 쿠키 동기화
+prisma/
+  schema.prisma         # 현재 스키마 (최신 버전)
+  versions/             # 스키마 버전 히스토리 ⭐ NEW
+    README.md           # 버전 관리 가이드
+    schema.v2.0.prisma  # v2.0 백업
 supabase/               # SQL 스크립트
-  migrations/           # 버전 관리 마이그레이션 ⭐ NEW
+  migrations/           # 버전 관리 마이그레이션 ⭐
     README.md           # 마이그레이션 가이드
     v2.0_init_complete_schema.sql  # 초기 스키마
   profiles.sql          # 프로필 테이블/트리거
@@ -365,29 +378,39 @@ supabase/migrations/v{MAJOR}.{MINOR}_{description}.sql
 **반드시 순서대로 진행:**
 
 ```bash
-# 1. schema.prisma 수정
-# 2. Prisma Client 재생성
+# 1. 현재 schema.prisma를 버전 백업
+cp prisma/schema.prisma prisma/versions/schema.v{version}.prisma
+
+# 2. schema.prisma 수정
+#    - 헤더에 버전 정보 업데이트
+#    - 변경 이력 주석 추가
+
+# 3. Prisma Client 재생성
 npx prisma generate
 
-# 3. Supabase에 적용 (개발환경 먼저)
+# 4. Supabase에 적용 (개발환경 먼저)
 npx prisma db push  # 또는 Supabase SQL Editor
 
-# 4. src/types/*.ts 업데이트 (필요시)
+# 5. src/types/*.ts 업데이트 (필요시)
 #    - Query 정의 수정
 #    - Export 타입 추가/수정
 
-# 5. 영향받는 컴포넌트 확인
+# 6. 영향받는 컴포넌트 확인
 npm run type-check
 
-# 6. 빌드 테스트
+# 7. 빌드 테스트
 npm run build
 
-# 7. Git 커밋
-git add supabase/migrations prisma/schema.prisma src/types
-git commit -m "feat: Add migration v{version} - {description}"
+# 8. SQL 마이그레이션 파일 생성
+#    - supabase/migrations/v{version}_{description}.sql
 
-# 8. 문서 업데이트
+# 9. Git 커밋
+git add prisma/schema.prisma prisma/versions supabase/migrations src/types
+git commit -m "feat: Schema v{version} - {description}"
+
+# 10. 문서 업데이트
 #    - supabase/migrations/README.md 업데이트
+#    - prisma/versions/README.md 업데이트
 #    - 현재 버전 기록
 ```
 
@@ -395,15 +418,20 @@ git commit -m "feat: Add migration v{version} - {description}"
 
 새로운 마이그레이션 작성 시 **반드시** 확인:
 
-- [ ] SQL 파일 작성 (`v{version}_{description}.sql`)
-- [ ] Supabase에서 실행 및 테스트
-- [ ] `prisma/schema.prisma` 업데이트
+- [ ] 현재 schema 백업 (`prisma/versions/schema.v{version}.prisma`)
+- [ ] `prisma/schema.prisma` 수정
+  - [ ] 헤더에 버전 번호 업데이트
+  - [ ] 변경 이력 주석 추가
 - [ ] `npx prisma generate` 실행
+- [ ] Supabase에 적용 (`npx prisma db push`)
 - [ ] `src/types/*.ts` 업데이트 (필요시)
 - [ ] 영향받는 컴포넌트 확인 및 수정
 - [ ] `npm run type-check` 성공 확인
 - [ ] `npm run build` 성공 확인
-- [ ] `supabase/migrations/README.md` 업데이트
+- [ ] SQL 파일 작성 (`supabase/migrations/v{version}_{description}.sql`)
+- [ ] 문서 업데이트
+  - [ ] `supabase/migrations/README.md` 업데이트
+  - [ ] `prisma/versions/README.md` 업데이트
 - [ ] Git 커밋
 - [ ] `.cursorrules` 업데이트 (주요 변경사항 시)
 

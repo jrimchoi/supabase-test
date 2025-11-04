@@ -1,13 +1,5 @@
 // Prisma Schema for Policy-based Permission Management System
 // PostgreSQL with Supabase
-// Version: 2.0 (2025-11-04) - 초기 완전한 스키마
-//
-// 변경 이력:
-// - v2.0 (2025-11-04): 초기 완전한 스키마 (Policy, State, Type, BusinessObject 등)
-//   * previewFeatures relationJoins 제거 (프로덕션 안정성)
-//   * Profile 연동 (auth.users)
-//   * 계층 구조 지원 (Type, Group)
-//   * EAV 패턴 (BusinessObject.data)
 
 generator client {
   provider = "prisma-client-js"
