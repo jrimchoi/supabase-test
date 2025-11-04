@@ -20,7 +20,7 @@ type Attribute = {
   label: string
   attrType: string
   isRequired: boolean
-  typeAttributes: Array<{ type: { id: string; name: string } }>
+  typeAttributes: Array<{ type: { id: string; name: string | null } }>
 }
 
 export function AttributeList({ initialAttributes }: { initialAttributes: Attribute[] }) {
@@ -123,7 +123,7 @@ export function AttributeList({ initialAttributes }: { initialAttributes: Attrib
                       <div className="flex gap-1 flex-wrap">
                         {attr.typeAttributes.map((ta) => (
                           <Badge key={ta.type.id} variant="secondary" className="text-xs">
-                            {ta.type.name}
+                            {ta.type.name || '(이름 없음)'}
                           </Badge>
                         ))}
                       </div>
