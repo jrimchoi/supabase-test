@@ -16,15 +16,12 @@ type BusinessObjectData = {
   policyId: string
   currentState: string
   description: string | null
-  owner: string | null
-  createdBy: string | null
-  updatedBy: string | null
   data: unknown
   createdAt: Date
   updatedAt: Date
   type: {
     id: string
-    name: string
+    name: string | null
     description: string | null
     prefix: string | null
     policy: {
