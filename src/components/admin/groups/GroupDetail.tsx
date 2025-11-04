@@ -7,24 +7,7 @@ import { UserSearchPanel } from '../users/UserSearchPanel'
 import { AssignedUsersList } from '../users/AssignedUsersList'
 import { addUserToGroup, removeUserFromGroup } from '@/app/admin/groups/[id]/actions'
 import { Badge } from '@/components/ui/badge'
-
-type User = {
-  id: string
-  email: string | null
-  full_name: string | null
-  name: string | null
-  avatar_url: string | null
-}
-
-type GroupData = {
-  id: string
-  name: string
-  description: string | null
-  isActive: boolean
-  parent: { id: string; name: string } | null
-  users: User[]
-  _count: { children: number; permissions: number; userGroups: number }
-}
+import type { GroupDetail as GroupData } from '@/types'
 
 export function GroupDetail({ group }: { group: GroupData }) {
   const router = useRouter()
@@ -105,11 +88,11 @@ export function GroupDetail({ group }: { group: GroupData }) {
         {/* 할당된 사용자 리스트 */}
         <Card>
           <CardHeader>
-            <CardTitle>할당된 사용자 ({group.users.length})</CardTitle>
+            <CardTitle>할당된 사용자 ({group.userGroups.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <AssignedUsersList
-              users={group.users}
+              userIds={group.userGroups.map(ug => ug.userId)}
               onRemove={handleRemoveUser}
               isPending={isPending}
             />
@@ -126,7 +109,7 @@ export function GroupDetail({ group }: { group: GroupData }) {
           <CardContent>
             <UserSearchPanel
               onAddUser={handleAddUser}
-              excludeUserIds={group.users.map((u) => u.id)}
+              excludeUserIds={group.userGroups.map((ug) => ug.userId)}
               isPending={isPending}
             />
           </CardContent>

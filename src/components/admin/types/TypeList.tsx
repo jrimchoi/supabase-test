@@ -21,29 +21,7 @@ import { useClientPagination } from '@/hooks/useClientPagination'
 import { TypeDialog } from './TypeDialog'
 import { PlusCircle, Edit, Trash2, GitBranch, Search, XCircle } from 'lucide-react'
 import { deleteType } from '@/app/admin/types/actions'
-
-type TypeListItem = {
-  id: string
-  name: string | null
-  description: string | null
-  prefix: string | null
-  createdAt: Date
-  updatedAt: Date
-  policy: {
-    name: string
-    revisionSequence: string
-  }
-  parent: {
-    id: string
-    name: string | null
-    description: string | null
-  } | null
-  _count?: {
-    children: number
-    objects: number
-    typeAttributes: number
-  }
-}
+import type { TypeListItem } from '@/types'
 
 export function TypeList({
   initialTypes,

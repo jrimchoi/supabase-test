@@ -13,18 +13,10 @@ import { useClientPagination } from '@/hooks/useClientPagination'
 import { AttributeDialog } from './AttributeDialog'
 import { PlusCircle, Edit, Trash2, Search, XCircle } from 'lucide-react'
 import { deleteAttribute } from '@/app/admin/attributes/actions'
+import type { AttributeListItem } from '@/types'
 
-type Attribute = {
-  id: string
-  name: string
-  label: string
-  attrType: string
-  isRequired: boolean
-  typeAttributes: Array<{ type: { id: string; name: string | null } }>
-}
-
-export function AttributeList({ initialAttributes }: { initialAttributes: Attribute[] }) {
-  const [selected, setSelected] = useState<Attribute | null>(null)
+export function AttributeList({ initialAttributes }: { initialAttributes: AttributeListItem[] }) {
+  const [selected, setSelected] = useState<AttributeListItem | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
@@ -56,7 +48,7 @@ export function AttributeList({ initialAttributes }: { initialAttributes: Attrib
 
   const hasFilters = nameFilter || labelFilter
 
-  const handleDelete = (attr: Attribute) => {
+  const handleDelete = (attr: AttributeListItem) => {
     if (!confirm(`"${attr.label}" Attribute를 삭제하시겠습니까?\n\n⚠️ 모든 Type에서 제거됩니다!`)) return
     startTransition(async () => {
       const result = await deleteAttribute(attr.id)

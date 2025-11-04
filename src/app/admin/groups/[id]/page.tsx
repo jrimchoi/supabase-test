@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Loading } from '@/components/ui/loading'
+import { groupDetailQuery } from '@/types'
 
 // ISR: 30초 캐싱, 데이터 변경 시 자동 revalidate
 export const revalidate = 30
@@ -14,45 +15,12 @@ type Params = { params: Promise<{ id: string }> }
 async function getGroupWithDetails(id: string) {
   const groupData = await prisma.group.findUnique({
     where: { id },
-    include: {
-      parent: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      userGroups: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-              full_name: true,
-              name: true,
-              avatar_url: true,
-            },
-          },
-        },
-      },
-      _count: {
-        select: {
-          permissions: true,
-          userGroups: true,
-          children: true,
-        },
-      },
-    },
+    ...groupDetailQuery,
   })
 
   if (!groupData) return null
 
-  // userGroups를 users 형태로 변환
-  const users = groupData.userGroups.map((ug) => ug.user)
-
-  return {
-    ...groupData,
-    users,
-  }
+  return groupData
 }
 
 export default async function GroupDetailPage({ params }: Params) {

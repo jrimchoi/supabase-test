@@ -8,36 +8,11 @@ import { addUserToRole, removeUserFromRole } from '@/app/admin/roles/[id]/action
 import { Badge } from '@/components/ui/badge'
 import { useRouter } from 'next/navigation'
 import { useTransition } from 'react'
-
-type User = {
-  id: string
-  email: string | null
-  full_name: string | null
-  name: string | null
-  avatar_url: string | null
-}
-
-type RoleData = {
-  id: string
-  name: string
-  description: string | null
-  isActive: boolean
-  createdAt: Date
-  updatedAt: Date
-  users: User[]
-  _count: {
-    permissions: number
-    userRoles: number
-  }
-}
+import type { RoleDetail as RoleData } from '@/types'
 
 export function RoleDetail({ role }: { role: RoleData }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  
-  // 디버깅: role 데이터 확인
-  console.log('🎯 RoleDetail - role.users:', role.users)
-  console.log('🎯 RoleDetail - role._count.userRoles:', role._count.userRoles)
 
   const handleAddUser = async (userId: string) => {
     startTransition(async () => {
@@ -104,11 +79,11 @@ export function RoleDetail({ role }: { role: RoleData }) {
         {/* 할당된 사용자 리스트 */}
         <Card>
           <CardHeader>
-            <CardTitle>할당된 사용자 ({role.users.length})</CardTitle>
+            <CardTitle>할당된 사용자 ({role.userRoles.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <AssignedUsersList
-              users={role.users}
+              userIds={role.userRoles.map(ur => ur.userId)}
               onRemove={handleRemoveUser}
               isPending={isPending}
             />
@@ -125,7 +100,7 @@ export function RoleDetail({ role }: { role: RoleData }) {
           <CardContent>
             <UserSearchPanel
               onAddUser={handleAddUser}
-              excludeUserIds={role.users.map((u) => u.id)}
+              excludeUserIds={role.userRoles.map((ur) => ur.userId)}
               isPending={isPending}
             />
           </CardContent>
