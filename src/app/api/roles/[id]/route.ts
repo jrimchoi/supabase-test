@@ -1,0 +1,90 @@
+// Role CRUD API - 단일 조회, 수정, 삭제
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+// GET /api/roles/[id] - Role 단일 조회
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const { searchParams } = new URL(request.url)
+    const include = searchParams.get('include')
+
+    const role = await prisma.role.findUnique({
+      where: { id },
+      include: {
+        ...(include?.includes('permissions') && { permissions: true }),
+        ...(include?.includes('users') && { userRoles: true }),
+      },
+    })
+
+    if (!role) {
+      return NextResponse.json(
+        { success: false, error: 'Role을 찾을 수 없습니다.' },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json({ success: true, data: role })
+  } catch (error) {
+    console.error('Role 조회 실패:', error)
+    return NextResponse.json(
+      { success: false, error: 'Role을 조회하지 못했습니다.' },
+      { status: 500 }
+    )
+  }
+}
+
+// PATCH /api/roles/[id] - Role 수정
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const body = await request.json()
+    const { name, description, isActive } = body
+
+    const role = await prisma.role.update({
+      where: { id },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(description !== undefined && { description }),
+        ...(isActive !== undefined && { isActive }),
+      },
+    })
+
+    return NextResponse.json({ success: true, data: role })
+  } catch (error) {
+    console.error('Role 수정 실패:', error)
+    return NextResponse.json(
+      { success: false, error: 'Role을 수정하지 못했습니다.' },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE /api/roles/[id] - Role 삭제
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+
+    await prisma.role.delete({
+      where: { id },
+    })
+
+    return NextResponse.json({ success: true, message: 'Role이 삭제되었습니다.' })
+  } catch (error) {
+    console.error('Role 삭제 실패:', error)
+    return NextResponse.json(
+      { success: false, error: 'Role을 삭제하지 못했습니다.' },
+      { status: 500 }
+    )
+  }
+}
+

@@ -1,20 +1,15 @@
-import Link from "next/link";
+import { redirect } from 'next/navigation'
+import { getServerSupabase } from '@/lib/supabase/server'
 
-export default function Home() {
-	return (
-		<main className="flex min-h-[calc(100dvh-120px)] flex-col items-center justify-center gap-6 p-6 text-center">
-			<h1 className="text-3xl font-bold tracking-tight">Supabase Auth 예제</h1>
-			<p className="text-muted-foreground">
-				Google, GitHub, 이메일로 로그인하세요.
-			</p>
-			<div className="flex gap-3">
-				<Link className="underline hover:no-underline" href="/signin">
-					로그인
-				</Link>
-				<Link className="underline hover:no-underline" href="/dashboard">
-					대시보드
-				</Link>
-			</div>
-		</main>
-	);
+export default async function Home() {
+	// 로그인 체크
+	const supabase = await getServerSupabase()
+	const { data: { session } } = await supabase.auth.getSession()
+
+	// 로그인되어 있으면 admin으로, 아니면 signin으로 리다이렉트
+	if (session) {
+		redirect('/admin')
+	} else {
+		redirect('/signin')
+	}
 }

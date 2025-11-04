@@ -1,0 +1,692 @@
+{
+  "info": {
+    "name": "Policy 기반 권한 관리 API",
+    "description": "Policy, State, Permission, Role, Group 등의 CRUD API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "1. Policy",
+      "item": [
+        {
+          "name": "Policy 목록 조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/policies",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "policies"]
+            }
+          }
+        },
+        {
+          "name": "Policy 목록 조회 (States 포함)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/policies?include=states",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "policies"],
+              "query": [
+                {
+                  "key": "include",
+                  "value": "states"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Policy 생성",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"문서 결재 정책\",\n  \"description\": \"문서 결재 흐름 관리\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/policies",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "policies"]
+            }
+          }
+        },
+        {
+          "name": "Policy 단일 조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/policies/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "policies", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Policy 수정",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"수정된 정책명\",\n  \"isActive\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/policies/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "policies", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Policy 삭제",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/policies/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "policies", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. State",
+      "item": [
+        {
+          "name": "State 목록 조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/states",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "states"]
+            }
+          }
+        },
+        {
+          "name": "State 생성",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policyId\": \"\",\n  \"name\": \"작성중\",\n  \"description\": \"문서 작성 단계\",\n  \"order\": 1,\n  \"isInitial\": true,\n  \"isFinal\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/states",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "states"]
+            }
+          }
+        },
+        {
+          "name": "State 수정",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"검토중\",\n  \"order\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/states/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "states", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "State 삭제",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/states/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "states", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. StateTransition",
+      "item": [
+        {
+          "name": "StateTransition 목록 조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/state-transitions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "state-transitions"]
+            }
+          }
+        },
+        {
+          "name": "StateTransition 생성",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fromStateId\": \"\",\n  \"toStateId\": \"\",\n  \"condition\": \"user.role === 'manager'\",\n  \"order\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/state-transitions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "state-transitions"]
+            }
+          }
+        },
+        {
+          "name": "StateTransition 삭제",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/state-transitions/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "state-transitions", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Role",
+      "item": [
+        {
+          "name": "Role 목록 조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles"]
+            }
+          }
+        },
+        {
+          "name": "Role 생성",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Manager\",\n  \"description\": \"관리자 역할\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles"]
+            }
+          }
+        },
+        {
+          "name": "Role 수정",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"수정된 설명\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Role 삭제",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Group",
+      "item": [
+        {
+          "name": "Group 목록 조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "groups"]
+            }
+          }
+        },
+        {
+          "name": "Group 생성",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"개발팀\",\n  \"description\": \"소프트웨어 개발팀\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "groups"]
+            }
+          }
+        },
+        {
+          "name": "Group 삭제",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/groups/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "groups", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Permission",
+      "item": [
+        {
+          "name": "Permission 목록 조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permissions"]
+            }
+          }
+        },
+        {
+          "name": "Permission 생성 (Role)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stateId\": \"\",\n  \"resource\": \"document\",\n  \"action\": \"modify\",\n  \"targetType\": \"role\",\n  \"roleId\": \"\",\n  \"isAllowed\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permissions"]
+            }
+          }
+        },
+        {
+          "name": "Permission 생성 (Group)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stateId\": \"\",\n  \"resource\": \"document\",\n  \"action\": \"view\",\n  \"targetType\": \"group\",\n  \"groupId\": \"\",\n  \"isAllowed\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permissions"]
+            }
+          }
+        },
+        {
+          "name": "Permission 삭제",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/permissions/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permissions", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. UserRole",
+      "item": [
+        {
+          "name": "UserRole 목록 조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user-roles?userId=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-roles"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "UserRole 생성 (User에게 Role 할당)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"\",\n  \"roleId\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user-roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-roles"]
+            }
+          }
+        },
+        {
+          "name": "UserRole 삭제",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user-roles/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-roles", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. UserGroup",
+      "item": [
+        {
+          "name": "UserGroup 목록 조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user-groups?userId=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-groups"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "UserGroup 생성 (User에게 Group 할당)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"\",\n  \"groupId\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user-groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-groups"]
+            }
+          }
+        },
+        {
+          "name": "UserGroup 삭제",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user-groups/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-groups", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. UserPermission",
+      "item": [
+        {
+          "name": "UserPermission 목록 조회",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user-permissions?userId=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-permissions"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "UserPermission 생성",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"\",\n  \"stateId\": \"\",\n  \"resource\": \"document\",\n  \"action\": \"modify\",\n  \"isAllowed\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user-permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-permissions"]
+            }
+          }
+        },
+        {
+          "name": "UserPermission 삭제",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user-permissions/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-permissions", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+

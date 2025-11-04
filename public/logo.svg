@@ -1,0 +1,24 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 배경 원 -->
+  <circle cx="32" cy="32" r="30" fill="#4A90E2" stroke="#2E6BB8" stroke-width="2"/>
+  
+  <!-- 정책 문서 아이콘 (중앙) -->
+  <path d="M18 22H46V42H18V22Z" fill="white" stroke="#2E6BB8" stroke-width="1.5"/>
+  <path d="M22 26H30" stroke="#4A90E2" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M22 30H38" stroke="#4A90E2" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M22 34H34" stroke="#4A90E2" stroke-width="1.5" stroke-linecap="round"/>
+  
+  <!-- 리비전 순환 화살표 (우측 하단) -->
+  <path d="M40 40C40 40 44 42 46 44C44 46 40 48 38 48C36 48 34 46 34 44C34 42 36 40 38 40" 
+        fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round"/>
+  <path d="M46 44L44 42L44 46" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- 상태 전이 화살표 (좌측 하단) -->
+  <path d="M18 44L22 40L26 44" fill="none" stroke="#50C878" stroke-width="2" stroke-linecap="round"/>
+  <path d="M22 40L22 36" fill="none" stroke="#50C878" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- 계층 구조 점 (좌측 상단) -->
+  <circle cx="20" cy="20" r="2" fill="#50C878"/>
+  <circle cx="16" cy="16" r="2" fill="#50C878"/>
+</svg>
+

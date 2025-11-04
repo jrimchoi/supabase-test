@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Draggable Resizable Table (Pure HTML/CSS/JS)</title>
+  <style>
+    /* 테이블 기본 스타일 */
+    .resizable-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: Arial, sans-serif;
+      table-layout: fixed; /* 컬럼 너비 고정 */
+    }
+
+    .resizable-table th,
+    .resizable-table td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .resizable-table th {
+      background-color: #f5f7fa;
+      position: relative;
+      user-select: none;
+    }
+
+    /* 리사이즈 핸들 (컬럼 경계) */
+    .resizable-table th::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+      cursor: col-resize;
+      background: transparent;
+      z-index: 10;
+      transition: background 0.2s;
+    }
+
+    /* 호버 시 핸들 강조 */
+    .resizable-table th:hover::after {
+      background: #a0c4ff;
+    }
+
+    /* 드래그 중 강조 */
+    .resizable-table th.resizing::after {
+      background: #4a90e2;
+    }
+
+    /* 드래그 중 전체 테이블 커서 */
+    body.resizing {
+      cursor: col-resize;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>드래그로 컬럼 너비 조절 가능한 테이블</h2>
+
+  <table class="resizable-table" id="dataTable">
+    <thead>
+      <tr>
+        <th style="width: 120px;">Product ID</th>
+        <th style="width: 200px;">Product Name</th>
+        <th style="width: 120px;">Unit Price</th>
+        <th style="width: 130px;">Units In Stock</th>
+        <th style="width: 100px;">Discontinued</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>Chai</td>
+        <td>$18.00</td>
+        <td>39</td>
+        <td>No</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>Chang</td>
+        <td>$19.00</td>
+        <td>17</td>
+        <td>No</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>Aniseed Syrup</td>
+        <td>$10.00</td>
+        <td>13</td>
+        <td>No</td>
+      </tr>
+      <!-- 더 많은 행... -->
+    </tbody>
+  </table>
+
+  <script>
+    // === 리사이징 로직 ===
+    document.addEventListener('DOMContentLoaded', () => {
+      const table = document.getElementById('dataTable');
+      const ths = table.querySelectorAll('thead th');
+      let activeTh = null;
+      let startX = 0;
+      let startWidth = 0;
+      const minWidth = 50; // 최소 너비
+
+      // 마우스 다운 → 드래그 시작
+      ths.forEach(th => {
+        const handle = th;
+        handle.addEventListener('mousedown', (e) => {
+          // 핸들 영역(오른쪽 5px)에서만 시작
+          if (e.offsetX < th.offsetWidth - 5) return;
+
+          activeTh = th;
+          startX = e.pageX;
+          startWidth = th.offsetWidth;
+          th.classList.add('resizing');
+          document.body.classList.add('resizing');
+          e.preventDefault();
+        });
+      });
+
+      // 마우스 이동 → 너비 조절
+      document.addEventListener('mousemove', (e) => {
+        if (!activeTh) return;
+
+        const diff = e.pageX - startX;
+        let newWidth = startWidth + diff;
+
+        // 최소 너비 제한
+        if (newWidth < minWidth) newWidth = minWidth;
+
+        activeTh.style.width = `${newWidth}px`;
+      });
+
+      // 마우스 업 → 드래그 종료
+      document.addEventListener('mouseup', () => {
+        if (activeTh) {
+          activeTh.classList.remove('resizing');
+          document.body.classList.remove('resizing');
+          activeTh = null;
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

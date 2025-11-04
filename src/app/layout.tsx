@@ -1,33 +1,50 @@
-import type { Metadata } from "next";
-import Link from "next/link";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
-	title: "Supabase Auth",
-	description: "Google, GitHub, 이메일 로그인 예제",
+	title: "Supabase Auth + Policy Management",
+	description: "Policy 기반 권한 관리 시스템",
+	manifest: "/manifest.json",
+	appleWebApp: {
+		capable: true,
+		statusBarStyle: "default",
+		title: "Policy Manager",
+	},
+	formatDetection: {
+		telephone: false,
+	},
+	icons: {
+		icon: [
+			{ url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+			{ url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
+		],
+		apple: [
+			{ url: "/icons/icon-152x152.png", sizes: "152x152", type: "image/png" },
+		],
+	},
+};
+
+export const viewport: Viewport = {
+	themeColor: "#18181b",
+	width: "device-width",
+	initialScale: 1,
+	maximumScale: 1,
+	userScalable: false,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 	return (
-		<html lang="ko">
-			<body>
-				<header className="border-b">
-					<div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-						<Link href="/" className="font-semibold">
-							Supabase Auth
-						</Link>
-						<nav className="flex gap-4 text-sm">
-							<Link href="/signin">로그인</Link>
-							<Link href="/dashboard">대시보드</Link>
-						</nav>
-					</div>
-				</header>
-				{children}
-				<footer className="border-t">
-					<div className="mx-auto max-w-5xl px-4 py-6 text-center text-xs text-muted-foreground">
-						© {new Date().getFullYear()} Supabase Test
-					</div>
-				</footer>
+		<html lang="ko" suppressHydrationWarning className="h-full">
+			<body className="h-full">
+				<ThemeProvider
+					attribute="class"
+					defaultTheme="system"
+					enableSystem
+					disableTransitionOnChange
+				>
+					{children}
+				</ThemeProvider>
 			</body>
 		</html>
 	);

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getBrowserSupabase } from "@/lib/supabase/client";
+import { logAuth } from "@/lib/logger";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,8 +17,10 @@ import {
 
 const supabase = getBrowserSupabase();
 
-export default function SignInPage() {
+function SignInContent() {
 	const router = useRouter();
+	const searchParams = useSearchParams();
+	const redirectTo = searchParams.get("redirectTo") || "/admin";
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [loading, setLoading] = useState(false);
@@ -27,16 +30,35 @@ export default function SignInPage() {
 		setLoading(true);
 		setMessage(null);
 		try {
-			const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`;
-			const { error } = await supabase.auth.signInWithOAuth({
+			// localStorage 확인 (before)
+			console.log("🔵 [SIGNIN] localStorage (before):", localStorage.getItem('app-auth')?.slice(0, 50));
+			
+			// 항상 현재 브라우저의 origin 사용 (클라이언트 컴포넌트이므로 가능)
+			const origin = window.location.origin;
+			
+			// redirectTo를 callback URL에 query parameter로 전달
+			const callbackUrl = `${origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`;
+			console.log("🔵 [SIGNIN] callbackUrl:", callbackUrl);
+			logAuth("signInWithProvider", { provider, callbackUrl, finalRedirect: redirectTo });
+			
+			const { data, error } = await supabase.auth.signInWithOAuth({
 				provider,
 				options: {
-					redirectTo,
+					redirectTo: callbackUrl,
 				},
 			});
+			
+			console.log("🔵 [SIGNIN] signInWithOAuth 응답:", { data, error });
+			
+			// localStorage 확인 (after)
+			const storageAfter = localStorage.getItem('app-auth');
+			console.log("🔵 [SIGNIN] localStorage (after):", storageAfter?.slice(0, 100));
+			console.log("🔵 [SIGNIN] localStorage 저장됨?", !!storageAfter);
+			
 			if (error) throw error;
 		} catch (err: unknown) {
 			const msg = err instanceof Error ? err.message : "로그인에 실패했습니다";
+			console.error("❌ [SIGNIN] 오류:", err);
 			setMessage(msg);
 		} finally {
 			setLoading(false);
@@ -48,7 +70,7 @@ export default function SignInPage() {
 		setLoading(true);
 		setMessage(null);
 		try {
-			const emailRedirectTo = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`;
+			const emailRedirectTo = `${window.location.origin}/auth/callback`;
 			const { error } = await supabase.auth.signInWithOtp({
 				email,
 				options: { emailRedirectTo },
@@ -73,7 +95,7 @@ export default function SignInPage() {
 				password,
 			});
 			if (error) throw error;
-			router.push("/dashboard");
+			router.push(redirectTo);
 		} catch (err: unknown) {
 			const msg = err instanceof Error ? err.message : "이메일/비밀번호 로그인에 실패했습니다";
 			setMessage(msg);
@@ -91,7 +113,7 @@ export default function SignInPage() {
 				email,
 				password,
 				options: {
-					emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+					emailRedirectTo: `${window.location.origin}/auth/callback`,
 				},
 			});
 			if (error) throw error;
@@ -186,5 +208,17 @@ export default function SignInPage() {
 				</CardContent>
 			</Card>
 		</div>
+	);
+}
+
+export default function SignInPage() {
+	return (
+		<Suspense fallback={
+			<div className="mx-auto flex min-h-[calc(100dvh-120px)] max-w-md items-center justify-center p-6">
+				<div className="text-muted-foreground">로딩 중...</div>
+			</div>
+		}>
+			<SignInContent />
+		</Suspense>
 	);
 }

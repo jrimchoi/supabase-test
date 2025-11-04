@@ -1,0 +1,104 @@
+{
+	"id": "complete-env-2025",
+	"name": "Complete Environment",
+	"values": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "prodUrl",
+			"value": "https://your-production-domain.com",
+			"type": "default",
+			"enabled": false
+		},
+		{
+			"key": "policyId",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "typeId",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "stateId",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "transitionId",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "attributeId",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "businessObjectId",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "relationshipId",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "businessRelationId",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "roleId",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "groupId",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "permissionId",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "userId",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "secret",
+			"enabled": true
+		},
+		{
+			"key": "refreshToken",
+			"value": "",
+			"type": "secret",
+			"enabled": true
+		}
+	],
+	"_postman_variable_scope": "environment"
+}
+

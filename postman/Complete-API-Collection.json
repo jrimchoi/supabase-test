@@ -1,0 +1,1691 @@
+{
+	"info": {
+		"_postman_id": "complete-api-2025",
+		"name": "Supabase Test - Complete API Collection",
+		"description": "모든 API 엔드포인트에 대한 샘플 데이터를 포함한 전체 컬렉션",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/signout",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "signout"]
+						}
+					}
+				},
+				{
+					"name": "Set Session Cookie",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example_token\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/session",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "session"]
+						}
+					}
+				},
+				{
+					"name": "Get Session Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/session",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "session"]
+						}
+					}
+				},
+				{
+					"name": "Set Supabase Session",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example_access_token\",\n  \"refresh_token\": \"example_refresh_token\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/supabase-session",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "supabase-session"]
+						}
+					}
+				},
+				{
+					"name": "Ensure Profile",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/profile/ensure",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "profile", "ensure"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Policies",
+			"item": [
+				{
+					"name": "List Policies",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/policies",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "policies"]
+						}
+					}
+				},
+				{
+					"name": "Create Policy",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Invoice Policy\",\n  \"description\": \"송장 처리를 위한 정책\",\n  \"version\": 1,\n  \"revisionSequence\": \"A,B,C\",\n  \"isActive\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/policies",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "policies"]
+						}
+					}
+				},
+				{
+					"name": "Get Policy by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/policies/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "policies", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "policy_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Policy",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Invoice Policy\",\n  \"description\": \"수정된 송장 처리 정책\",\n  \"version\": 2,\n  \"isActive\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/policies/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "policies", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "policy_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Policy",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/policies/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "policies", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "policy_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Policy Dependencies",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/policies/:id/dependencies",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "policies", ":id", "dependencies"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "policy_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Deactivate Other Policies",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"activeId\": \"policy_id_to_keep_active\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/policies/deactivate-others",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "policies", "deactivate-others"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "States",
+			"item": [
+				{
+					"name": "List States",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/states?policyId=policy_id_here",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "states"],
+							"query": [
+								{
+									"key": "policyId",
+									"value": "policy_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create State",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Draft\",\n  \"description\": \"초안 상태\",\n  \"policyId\": \"policy_id_here\",\n  \"order\": 1,\n  \"isInitial\": true,\n  \"isFinal\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/states",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "states"]
+						}
+					}
+				},
+				{
+					"name": "Get State by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/states/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "states", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "state_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update State",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Draft\",\n  \"description\": \"수정된 초안 상태\",\n  \"order\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/states/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "states", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "state_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete State",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/states/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "states", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "state_id_here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "State Transitions",
+			"item": [
+				{
+					"name": "List Transitions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/state-transitions?policyId=policy_id_here",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "state-transitions"],
+							"query": [
+								{
+									"key": "policyId",
+									"value": "policy_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Transition",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fromStateId\": \"state_id_1\",\n  \"toStateId\": \"state_id_2\",\n  \"condition\": \"user.role === 'manager'\",\n  \"description\": \"관리자 승인\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/state-transitions",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "state-transitions"]
+						}
+					}
+				},
+				{
+					"name": "Get Transition by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/state-transitions/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "state-transitions", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "transition_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Transition",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"condition\": \"user.role === 'admin'\",\n  \"description\": \"관리자 최종 승인\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/state-transitions/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "state-transitions", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "transition_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Transition",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/state-transitions/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "state-transitions", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "transition_id_here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Types",
+			"item": [
+				{
+					"name": "List Types",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/types?policyId=policy_id_here",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "types"],
+							"query": [
+								{
+									"key": "policyId",
+									"value": "policy_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Type",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"invoice\",\n  \"name\": \"Invoice\",\n  \"description\": \"송장 문서 타입\",\n  \"policyId\": \"policy_id_here\",\n  \"prefix\": \"INV\",\n  \"parentId\": null\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/types",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "types"]
+						}
+					}
+				},
+				{
+					"name": "Get Type by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/types/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "types", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "type_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Type",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Invoice\",\n  \"description\": \"수정된 송장 문서 타입\",\n  \"prefix\": \"INV-2024\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/types/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "types", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "type_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Type",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/types/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "types", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "type_id_here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Attributes",
+			"item": [
+				{
+					"name": "List Attributes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/attributes",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "attributes"]
+						}
+					}
+				},
+				{
+					"name": "Search Attributes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/attributes/search?q=invoice",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "attributes", "search"],
+							"query": [
+								{
+									"key": "q",
+									"value": "invoice"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Attribute",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"invoiceNumber\",\n  \"label\": \"Invoice Number\",\n  \"description\": \"고유 송장 번호\",\n  \"attrType\": \"STRING\",\n  \"isRequired\": true,\n  \"defaultValue\": null\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/attributes",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "attributes"]
+						}
+					}
+				},
+				{
+					"name": "Get Attribute by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/attributes/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "attributes", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "attribute_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Attribute",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"label\": \"Updated Invoice Number\",\n  \"description\": \"수정된 송장 번호\",\n  \"isRequired\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/attributes/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "attributes", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "attribute_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Attribute",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/attributes/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "attributes", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "attribute_id_here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Business Objects",
+			"item": [
+				{
+					"name": "List Business Objects",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/business-objects?page=1&limit=20&typeId=&policyId=&currentState=",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "business-objects"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "typeId",
+									"value": ""
+								},
+								{
+									"key": "policyId",
+									"value": ""
+								},
+								{
+									"key": "currentState",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Business Object",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"typeId\": \"type_id_here\",\n  \"policyId\": \"policy_id_here\",\n  \"currentState\": \"Draft\",\n  \"name\": \"송장-2024-001\",\n  \"description\": \"2024년 첫 번째 송장\",\n  \"data\": {\n    \"invoiceNumber\": \"INV-2024-001\",\n    \"customerName\": \"ABC Company\",\n    \"totalAmount\": 1000000,\n    \"isPaid\": false,\n    \"issueDate\": \"2024-11-04\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/business-objects",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "business-objects"]
+						}
+					}
+				},
+				{
+					"name": "Get Business Object by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/business-objects/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "business-objects", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "object_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Business Object",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"currentState\": \"Approved\",\n  \"description\": \"승인된 송장\",\n  \"data\": {\n    \"invoiceNumber\": \"INV-2024-001\",\n    \"customerName\": \"ABC Company\",\n    \"totalAmount\": 1200000,\n    \"isPaid\": true,\n    \"issueDate\": \"2024-11-04\",\n    \"paidDate\": \"2024-11-05\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/business-objects/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "business-objects", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "object_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Business Object",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/business-objects/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "business-objects", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "object_id_here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Relationships (Type Relations)",
+			"item": [
+				{
+					"name": "List Relationships",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/relationships",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "relationships"]
+						}
+					}
+				},
+				{
+					"name": "Create Relationship",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Invoice-Customer\",\n  \"description\": \"송장과 고객 간의 관계\",\n  \"fromTypeId\": \"invoice_type_id\",\n  \"toTypeId\": \"customer_type_id\",\n  \"cardinality\": \"MANY_TO_ONE\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/relationships",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "relationships"]
+						}
+					}
+				},
+				{
+					"name": "Get Relationship by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/relationships/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "relationships", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "relationship_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Relationship",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Invoice-Customer\",\n  \"description\": \"수정된 송장-고객 관계\",\n  \"cardinality\": \"ONE_TO_MANY\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/relationships/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "relationships", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "relationship_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Relationship",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/relationships/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "relationships", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "relationship_id_here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Business Relations (Object Relations)",
+			"item": [
+				{
+					"name": "List Business Relations",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/business-relations?fromObjectId=&toObjectId=&relationshipId=",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "business-relations"],
+							"query": [
+								{
+									"key": "fromObjectId",
+									"value": ""
+								},
+								{
+									"key": "toObjectId",
+									"value": ""
+								},
+								{
+									"key": "relationshipId",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Business Relation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"relationshipId\": \"relationship_id_here\",\n  \"fromObjectId\": \"invoice_object_id\",\n  \"toObjectId\": \"customer_object_id\",\n  \"description\": \"송장 #001과 고객 ABC의 관계\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/business-relations",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "business-relations"]
+						}
+					}
+				},
+				{
+					"name": "Get Business Relation by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/business-relations/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "business-relations", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "relation_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Business Relation",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"description\": \"수정된 송장-고객 관계\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/business-relations/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "business-relations", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "relation_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Business Relation",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/business-relations/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "business-relations", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "relation_id_here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Roles",
+			"item": [
+				{
+					"name": "List Roles",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/roles",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "roles"]
+						}
+					}
+				},
+				{
+					"name": "Create Role",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Manager\",\n  \"description\": \"관리자 역할\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/roles",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "roles"]
+						}
+					}
+				},
+				{
+					"name": "Get Role by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/roles/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "roles", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "role_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Role",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Senior Manager\",\n  \"description\": \"수석 관리자 역할\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/roles/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "roles", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "role_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Role",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/roles/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "roles", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "role_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Role Dependencies",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/roles/:id/dependencies",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "roles", ":id", "dependencies"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "role_id_here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Groups",
+			"item": [
+				{
+					"name": "List Groups",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/groups",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "groups"]
+						}
+					}
+				},
+				{
+					"name": "Create Group",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Finance Team\",\n  \"description\": \"재무팀 그룹\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/groups",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "groups"]
+						}
+					}
+				},
+				{
+					"name": "Get Group by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/groups/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "groups", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "group_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Group",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Accounting Team\",\n  \"description\": \"회계팀 그룹\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/groups/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "groups", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "group_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Group",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/groups/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "groups", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "group_id_here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Permissions",
+			"item": [
+				{
+					"name": "List Permissions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/permissions?stateId=&targetType=&targetId=",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "permissions"],
+							"query": [
+								{
+									"key": "stateId",
+									"value": ""
+								},
+								{
+									"key": "targetType",
+									"value": ""
+								},
+								{
+									"key": "targetId",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Permission",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"stateId\": \"state_id_here\",\n  \"resource\": \"Invoice\",\n  \"action\": \"create,view,modify\",\n  \"targetType\": \"role\",\n  \"targetId\": \"role_id_here\",\n  \"expression\": \"user.department === 'finance'\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/permissions",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "permissions"]
+						}
+					}
+				},
+				{
+					"name": "Get Permission by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/permissions/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "permissions", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "permission_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Permission",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"action\": \"create,view,modify,delete\",\n  \"expression\": \"user.department === 'finance' && user.level >= 3\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/permissions/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "permissions", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "permission_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Permission",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/permissions/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "permissions", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "permission_id_here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "User Roles",
+			"item": [
+				{
+					"name": "List User Roles",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/user-roles?userId=&roleId=",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "user-roles"],
+							"query": [
+								{
+									"key": "userId",
+									"value": ""
+								},
+								{
+									"key": "roleId",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create User Role",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"user_id_here\",\n  \"roleId\": \"role_id_here\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/user-roles",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "user-roles"]
+						}
+					}
+				},
+				{
+					"name": "Get User Role by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/user-roles/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "user-roles", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "user_role_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete User Role",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/user-roles/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "user-roles", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "user_role_id_here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "User Groups",
+			"item": [
+				{
+					"name": "List User Groups",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/user-groups?userId=&groupId=",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "user-groups"],
+							"query": [
+								{
+									"key": "userId",
+									"value": ""
+								},
+								{
+									"key": "groupId",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create User Group",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"user_id_here\",\n  \"groupId\": \"group_id_here\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/user-groups",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "user-groups"]
+						}
+					}
+				},
+				{
+					"name": "Get User Group by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/user-groups/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "user-groups", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "user_group_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete User Group",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/user-groups/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "user-groups", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "user_group_id_here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "User Permissions",
+			"item": [
+				{
+					"name": "List User Permissions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/user-permissions?userId=",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "user-permissions"],
+							"query": [
+								{
+									"key": "userId",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create User Permission",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"user_id_here\",\n  \"stateId\": \"state_id_here\",\n  \"resource\": \"Invoice\",\n  \"action\": \"view\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/user-permissions",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "user-permissions"]
+						}
+					}
+				},
+				{
+					"name": "Get User Permission by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/user-permissions/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "user-permissions", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "user_permission_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update User Permission",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"action\": \"view,modify\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/user-permissions/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "user-permissions", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "user_permission_id_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete User Permission",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/user-permissions/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "user-permissions", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "user_permission_id_here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Search Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/users/search?q=john",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users", "search"],
+							"query": [
+								{
+									"key": "q",
+									"value": "john"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Utilities",
+			"item": [
+				{
+					"name": "Query Test",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"SELECT * FROM \\\"Policy\\\" LIMIT 5;\",\n  \"connectionType\": \"pool\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/query-test",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "query-test"]
+						}
+					}
+				},
+				{
+					"name": "Table Spec",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/table-spec",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "table-spec"]
+						}
+					}
+				}
+			]
+		}
+	]
+}
+

@@ -1,0 +1,474 @@
+// Prisma Schema for Policy-based Permission Management System
+// PostgreSQL with Supabase
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // directUrl은 IP 제한으로 실패 시 주석 처리
+  // directUrl = env("DATABASE_DIRECT_URL")
+}
+
+// ============================================
+// Policy & State Management
+// ============================================
+
+/// Policy: 권한 정책 정의
+model Policy {
+  id               String   @id @default(cuid())
+  name             String   @unique
+  description      String?
+  revisionSequence String   @default("A,B,C") // 리비전 순서 관리 (콤마 구분)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  createdBy        String? // auth.users.id 참조
+  updatedBy        String?
+
+  // 관계
+  states          State[]
+  policyTypes     PolicyType[] // Type과의 Many-to-Many 관계
+  types           Type[] // Type의 기본 Policy (리비전용)
+  businessObjects BusinessObject[]
+
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+/// State: Policy 내의 상태
+/// 각 State는 previous/next 관계를 가짐 (다중 next 가능)
+model State {
+  id          String   @id @default(cuid())
+  policyId    String
+  name        String
+  description String?
+  order       Int // 상태 순서 (State Diagram 표시용)
+  isInitial   Boolean  @default(false) // 초기 상태 여부
+  isFinal     Boolean  @default(false) // 최종 상태 여부
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 관계
+  policy Policy @relation(fields: [policyId], references: [id], onDelete: Restrict)
+
+  // State 전이 (다중 next state 지원)
+  fromTransitions StateTransition[] @relation("FromState")
+  toTransitions   StateTransition[] @relation("ToState")
+
+  // State별 권한
+  permissions Permission[]
+
+  @@unique([policyId, name])
+  @@index([policyId])
+  @@index([order])
+}
+
+/// StateTransition: State 간 전이 관계
+/// 다중 next state를 지원 (한 State에서 여러 State로 전이 가능)
+model StateTransition {
+  id          String   @id @default(cuid())
+  fromStateId String // 이전 상태
+  toStateId   String // 다음 상태 (다중 가능)
+  condition   String? // 전이 조건 (expression, 선택적)
+  order       Int? // 전이 순서 (같은 fromState 내에서)
+  createdAt   DateTime @default(now())
+
+  // 관계
+  fromState State @relation("FromState", fields: [fromStateId], references: [id], onDelete: Cascade)
+  toState   State @relation("ToState", fields: [toStateId], references: [id], onDelete: Cascade)
+
+  @@unique([fromStateId, toStateId])
+  @@index([fromStateId])
+  @@index([toStateId])
+}
+
+// ============================================
+// Permission Management
+// ============================================
+
+/// Permission: State별 권한 정의
+/// User, Role, Group별로 create, view, modify, delete 권한 관리
+/// Note: targetType에 따라 roleId, groupId, userId 중 하나만 사용
+model Permission {
+  id       String @id @default(cuid())
+  stateId  String
+  resource String // 리소스 타입 (예: "document", "comment" 등)
+  action   String // 권한 액션: create, view, modify, delete
+
+  // 권한 대상 타입 (하나만 선택)
+  targetType String // "user", "role", "group"
+
+  // targetType에 따라 하나만 사용
+  roleId  String? // targetType='role'일 때
+  groupId String? // targetType='group'일 때
+  userId  String? // targetType='user'일 때 (auth.users.id)
+
+  // Expression 평가
+  expression String? // 권한 적용 조건 (expression, true일 경우 적용)
+
+  isAllowed Boolean  @default(true) // true: 허용, false: 거부
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 관계
+  state State  @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  role  Role?  @relation("PermissionRole", fields: [roleId], references: [id], onDelete: Cascade)
+  group Group? @relation("PermissionGroup", fields: [groupId], references: [id], onDelete: Cascade)
+
+  // userId는 auth.users.id (Supabase auth 스키마와 연동, relation 없음)
+
+  @@unique([stateId, resource, action, targetType, roleId, groupId, userId])
+  @@index([stateId])
+  @@index([targetType])
+  @@index([resource, action])
+  @@index([roleId])
+  @@index([groupId])
+  @@index([userId])
+}
+
+// ============================================
+// Role & Group Management
+// ============================================
+
+/// Role: 역할 정의
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 관계
+  permissions Permission[] @relation("PermissionRole")
+  userRoles   UserRole[]
+
+  @@index([isActive])
+}
+
+/// Group: 그룹 정의
+model Group {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  parentId    String? // 부모 그룹 (계층 구조 지원)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 관계
+  parent      Group?       @relation("GroupHierarchy", fields: [parentId], references: [id])
+  children    Group[]      @relation("GroupHierarchy")
+  permissions Permission[] @relation("PermissionGroup")
+  userGroups  UserGroup[]
+
+  @@index([isActive])
+  @@index([parentId])
+}
+
+// ============================================
+// User Management (Supabase 연동)
+// ============================================
+
+/// Profile: Supabase public.profiles 테이블 (auth.users와 1:1)
+model Profile {
+  id         String  @id @db.Uuid // auth.users.id와 동일 (UUID 타입)
+  email      String?
+  full_name  String?
+  name       String?
+  avatar_url String?
+
+  // 관계
+  userRoles  UserRole[]  @relation("UserRoles")
+  userGroups UserGroup[] @relation("UserGroups")
+
+  @@map("profiles") // Supabase 테이블명
+}
+
+/// UserRole: User-Role 매핑 (Many-to-Many)
+model UserRole {
+  id        String   @id @default(cuid())
+  userId    String   @db.Uuid // auth.users.id (UUID 타입)
+  roleId    String
+  createdAt DateTime @default(now())
+
+  // 관계
+  role Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user Profile @relation("UserRoles", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+}
+
+/// UserGroup: User-Group 매핑 (Many-to-Many)
+model UserGroup {
+  id        String   @id @default(cuid())
+  userId    String   @db.Uuid // auth.users.id (UUID 타입)
+  groupId   String
+  createdAt DateTime @default(now())
+
+  // 관계
+  group Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  Profile @relation("UserGroups", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+  @@index([userId])
+  @@index([groupId])
+}
+
+/// UserPermission: User별 직접 권한 (Role/Group 외)
+model UserPermission {
+  id         String   @id @default(cuid())
+  userId     String // auth.users.id
+  stateId    String
+  resource   String
+  action     String
+  expression String? // 권한 적용 조건
+  isAllowed  Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, stateId, resource, action])
+  @@index([userId])
+  @@index([stateId])
+}
+
+// ============================================
+// Business Type & Object Management
+// ============================================
+
+/// Type: 비즈니스 타입 (계층 구조 지원, 속성 상속)
+model Type {
+  id          String  @id @default(cuid())
+  name        String  @unique // 고유한 타입 식별자 (예: "invoice", "tax-invoice")
+  description String? // 타입 설명 (중복 허용, 상속 가능)
+  prefix      String? // 접두사 (예: "INV", "TAX", 상속 가능)
+
+  // 기본 Policy (리비전 자동 할당용)
+  policyId String
+  policy   Policy @relation(fields: [policyId], references: [id], onDelete: Restrict)
+
+  // 계층 구조 (self-referencing)
+  parentId String?
+  parent   Type?   @relation("TypeHierarchy", fields: [parentId], references: [id])
+  children Type[]  @relation("TypeHierarchy")
+
+  // 관계
+  policyTypes       PolicyType[] // Policy와의 Many-to-Many 관계
+  typeAttributes    TypeAttribute[] // Attribute 연결
+  objects           BusinessObject[] // 비즈니스 객체 인스턴스
+  fromRelationships Relationship[]   @relation("FromType") // 이 Type에서 출발하는 관계
+  toRelationships   Relationship[]   @relation("ToType") // 이 Type으로 도착하는 관계
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+  @@index([policyId])
+  @@index([parentId])
+}
+
+/// PolicyType: Policy-Type 매핑 테이블 (Many-to-Many)
+model PolicyType {
+  id        String   @id @default(cuid())
+  policyId  String
+  typeId    String
+  createdAt DateTime @default(now())
+
+  // 관계
+  policy Policy @relation(fields: [policyId], references: [id], onDelete: Restrict)
+  type   Type   @relation(fields: [typeId], references: [id], onDelete: Restrict)
+
+  @@unique([policyId, typeId])
+  @@index([policyId])
+  @@index([typeId])
+}
+
+/// Attribute: 공통 속성 정의 (모든 Type에서 재사용 가능)
+model Attribute {
+  id           String   @id @default(cuid())
+  name         String   @unique // "amount", "due_date"
+  label        String
+  description  String?
+  attrType     AttrType // enum
+  isRequired   Boolean  @default(false)
+  defaultValue String? // JSON string
+  validation   String? // regex, min, max 등
+  createdAt    DateTime @default(now())
+
+  // 관계
+  typeAttributes         TypeAttribute[] // Type과의 연결
+  relationshipAttributes RelationshipAttribute[] // Relationship과의 연결
+
+  @@index([name])
+}
+
+/// TypeAttribute: Type-Attribute 연결 테이블 (Many-to-Many)
+model TypeAttribute {
+  id          String   @id @default(cuid())
+  typeId      String
+  attributeId String
+  createdAt   DateTime @default(now())
+
+  // 관계
+  type      Type      @relation(fields: [typeId], references: [id], onDelete: Cascade)
+  attribute Attribute @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+
+  @@unique([typeId, attributeId])
+  @@index([typeId])
+  @@index([attributeId])
+}
+
+/// AttrType: 속성 타입
+enum AttrType {
+  STRING
+  INTEGER
+  REAL
+  DATE
+  BOOLEAN
+  JSON
+  ENUM
+}
+
+/// BusinessObject: 비즈니스 객체 인스턴스
+/// Type의 스키마 정의(Attribute)에 맞춰 실제 데이터를 data 필드(JSON)에 저장
+/// 리비전 시스템: typeId + name + revision (자동 할당)
+model BusinessObject {
+  id String @id @default(cuid())
+
+  // Type 참조 (스키마 정의용)
+  typeId   String? // Type 모델 참조 (nullable)
+  name     String? // 비즈니스 객체 이름 (예: "송장-2025-001")
+  revision String? // 리비전 (예: "A", "B", "C")
+
+  // 기본 속성 (표준)
+  policyId     String
+  currentState String // State name
+  description  String? // 설명
+  owner        String? // 소유자 (auth.users.id)
+  createdBy    String? // 생성자 (auth.users.id)
+  updatedBy    String? // 수정자 (auth.users.id)
+
+  // 사용자 정의 데이터
+  data Json? // 실제 데이터 (JSON 형식) - Type/Attribute 스키마에 맞춰 저장
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 관계
+  type   Type?  @relation(fields: [typeId], references: [id], onDelete: Restrict)
+  policy Policy @relation(fields: [policyId], references: [id], onDelete: Restrict)
+
+  // Relationship 관련
+  fromRelations BusinessObjectRelationship[] @relation("FromObjectRelation")
+  toRelations   BusinessObjectRelationship[] @relation("ToObjectRelation")
+
+  // 유니크 제약
+  @@unique([typeId, name, revision]) // 이름 + 리비전 조합 유니크
+  @@index([typeId])
+  @@index([policyId])
+  @@index([currentState])
+  @@index([owner])
+  @@index([createdBy])
+  @@index([createdAt]) // ORDER BY 성능 최적화 (필수!)
+  @@index([typeId, policyId, name, revision]) // 복합 인덱스 (성능 최적화)
+}
+
+// ============================================
+// Relationship Management (EAV 패턴)
+// ============================================
+
+/// Relationship: Type 간 관계 정의
+/// fromType → toType 관계를 정의하고, Attribute를 가질 수 있음
+model Relationship {
+  id          String  @id @default(cuid())
+  name        String  @unique // 관계 이름 (예: "invoice_to_customer")
+  description String? // 관계 설명
+
+  // Type 간 관계
+  fromTypeId String // 출발 Type
+  toTypeId   String // 도착 Type
+
+  // 카디널리티 (관계 타입)
+  cardinality RelationshipCardinality // ONE_TO_ONE, ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY
+
+  // 메타데이터
+  isRequired Boolean  @default(false) // 필수 관계 여부
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  createdBy  String? // auth.users.id
+  updatedBy  String?
+
+  // 관계
+  fromType               Type                         @relation("FromType", fields: [fromTypeId], references: [id], onDelete: Restrict)
+  toType                 Type                         @relation("ToType", fields: [toTypeId], references: [id], onDelete: Restrict)
+  relationshipAttributes RelationshipAttribute[] // Relationship도 Attribute를 가질 수 있음
+  objectRelationships    BusinessObjectRelationship[] // 실제 인스턴스 간 관계
+
+  @@unique([fromTypeId, toTypeId, name]) // 같은 Type 쌍에서 관계 이름 유니크
+  @@index([fromTypeId])
+  @@index([toTypeId])
+  @@index([cardinality])
+  @@index([isActive])
+}
+
+/// RelationshipCardinality: 관계 카디널리티
+enum RelationshipCardinality {
+  ONE_TO_ONE // 1:1 관계
+  ONE_TO_MANY // 1:N 관계
+  MANY_TO_ONE // N:1 관계
+  MANY_TO_MANY // N:M 관계
+}
+
+/// RelationshipAttribute: Relationship-Attribute 연결 (Many-to-Many)
+/// 관계 자체도 속성을 가질 수 있음 (예: "since_date", "weight", "priority")
+model RelationshipAttribute {
+  id             String   @id @default(cuid())
+  relationshipId String
+  attributeId    String
+  createdAt      DateTime @default(now())
+
+  // 관계
+  relationship Relationship @relation(fields: [relationshipId], references: [id], onDelete: Cascade)
+  attribute    Attribute    @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+
+  @@unique([relationshipId, attributeId])
+  @@index([relationshipId])
+  @@index([attributeId])
+}
+
+/// BusinessObjectRelationship: 실제 BusinessObject 인스턴스 간의 관계
+/// Relationship 정의에 따라 실제 객체들을 연결
+model BusinessObjectRelationship {
+  id String @id @default(cuid())
+
+  // 관계 정의 참조
+  relationshipId String
+
+  // 실제 객체 간 연결
+  fromObjectId String // BusinessObject.id
+  toObjectId   String // BusinessObject.id
+
+  // 관계 데이터 (Relationship의 Attribute에 맞춰 저장)
+  data Json? // 관계 속성 데이터 (예: {since: "2025-01-01", priority: "high"})
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String? // auth.users.id
+  updatedBy String?
+
+  // 관계
+  relationship Relationship   @relation(fields: [relationshipId], references: [id], onDelete: Restrict)
+  fromObject   BusinessObject @relation("FromObjectRelation", fields: [fromObjectId], references: [id], onDelete: Cascade)
+  toObject     BusinessObject @relation("ToObjectRelation", fields: [toObjectId], references: [id], onDelete: Cascade)
+
+  @@unique([relationshipId, fromObjectId, toObjectId]) // 같은 관계에서 중복 연결 방지
+  @@index([relationshipId])
+  @@index([fromObjectId])
+  @@index([toObjectId])
+}
