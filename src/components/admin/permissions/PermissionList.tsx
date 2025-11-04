@@ -23,7 +23,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { ScrollableTable } from '@/components/ui/scrollable-table'
 import { PermissionDialog } from './PermissionDialog'
-import { PlusCircle, Edit, Trash2, Check, X } from 'lucide-react'
+import { PlusCircle, Edit, Trash2, Check, X, Search, XCircle } from 'lucide-react'
 import { deletePermission } from '@/app/admin/permissions/actions'
 
 type Permission = {
@@ -169,6 +169,15 @@ export function PermissionList({
     setCurrentPage(1)
   }
 
+  // 필터 초기화
+  const handleResetFilters = () => {
+    setPolicySearch('')
+    setResourceFilter('')
+    setCurrentPage(1)
+  }
+
+  const hasFilters = policySearch || resourceFilter
+
   return (
     <div className="flex flex-col h-full mt-2.5">
       {/* 헤더 카드: 타이틀 + 설명 + 버튼 + 필터 */}
@@ -228,6 +237,23 @@ export function PermissionList({
                 onChange={(e) => handleResourceFilterChange(e.target.value)}
                 className="w-64"
               />
+              <Button
+                variant="outline"
+                size="icon"
+                title="필터 적용"
+                disabled={!hasFilters}
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleResetFilters}
+                title="필터 초기화"
+                disabled={!hasFilters}
+              >
+                <XCircle className="h-4 w-4" />
+              </Button>
             </div>
           </CardContent>
         </Card>

@@ -58,7 +58,7 @@ export default async function BusinessObjectRelationshipsPage() {
 
   return (
     <div className="admin-page-container">
-      <div className="flex-1 min-h-0">
+      <div className="admin-list-wrapper">
         <Suspense fallback={<div>로딩 중...</div>}>
           <BusinessObjectRelationshipList initialData={objectRelationships} />
         </Suspense>

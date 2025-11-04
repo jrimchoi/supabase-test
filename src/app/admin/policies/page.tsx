@@ -11,31 +11,46 @@ export const metadata = {
 // searchParams 제거로 Static/ISR 가능!
 export const revalidate = 30
 
-async function getAllPolicies() {
-  const policies = await prisma.policy.findMany({
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      revisionSequence: true,
-      isActive: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-    orderBy: { name: 'asc' },
-  })
+async function getAllData() {
+  const [policies, types] = await Promise.all([
+    prisma.policy.findMany({
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        revisionSequence: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+        types: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: { name: 'asc' },
+    }),
+    prisma.type.findMany({
+      select: {
+        id: true,
+        name: true,
+        policyId: true,
+      },
+    }),
+  ])
 
-  return policies
+  return { policies, types }
 }
 
 export default async function PoliciesPage() {
-  const policies = await getAllPolicies()
+  const { policies, types } = await getAllData()
 
   return (
     <div className="admin-page-container">
       <div className="flex-1 min-h-0">
         <Suspense fallback={<div>로딩 중...</div>}>
-          <PolicyList initialPolicies={policies} />
+          <PolicyList initialPolicies={policies} allTypes={types} />
         </Suspense>
       </div>
     </div>

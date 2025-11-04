@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -12,6 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { ScrollableTable } from '@/components/ui/scrollable-table'
@@ -19,7 +20,7 @@ import { ClientPagination } from '@/components/ui/client-pagination'
 import { useClientPagination } from '@/hooks/useClientPagination'
 import { GroupDialog } from './GroupDialog'
 import { DeleteGroupDialog } from './DeleteGroupDialog'
-import { PlusCircle, Edit, Trash2 } from 'lucide-react'
+import { PlusCircle, Edit, Trash2, Search, XCircle } from 'lucide-react'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { updateGroup } from '@/app/admin/groups/actions'
@@ -41,6 +42,12 @@ type Group = {
     permissions: number
     userGroups: number
   }
+  userGroups?: Array<{
+    user: {
+      id: string
+      email: string | null
+    }
+  }>
 }
 
 export function GroupList({ initialGroups }: { initialGroups: Group[] }) {
@@ -51,8 +58,34 @@ export function GroupList({ initialGroups }: { initialGroups: Group[] }) {
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
-  // 페이징 훅 사용
-  const pagination = useClientPagination(initialGroups, { initialPageSize: 20 })
+  // 필터 상태
+  const [groupNameFilter, setGroupNameFilter] = useState('')
+  const [userNameFilter, setUserNameFilter] = useState('')
+
+  // 필터링된 데이터
+  const filteredGroups = useMemo(() => {
+    return initialGroups.filter((group) => {
+      const matchGroupName = !groupNameFilter || 
+        group.name.toLowerCase().includes(groupNameFilter.toLowerCase())
+      const matchUserName = !userNameFilter || 
+        (group.userGroups?.some(ug => 
+          ug.user.email?.toLowerCase().includes(userNameFilter.toLowerCase())
+        ) ?? false)
+      
+      return matchGroupName && matchUserName
+    })
+  }, [initialGroups, groupNameFilter, userNameFilter])
+
+  // 페이징 훅 사용 (필터링된 데이터)
+  const pagination = useClientPagination(filteredGroups, { initialPageSize: 20 })
+
+  // 필터 초기화
+  const handleResetFilters = () => {
+    setGroupNameFilter('')
+    setUserNameFilter('')
+  }
+
+  const hasFilters = groupNameFilter || userNameFilter
 
   const handleCreate = () => {
     setSelectedGroup(null)
@@ -93,14 +126,22 @@ export function GroupList({ initialGroups }: { initialGroups: Group[] }) {
       {/* 헤더 카드: 타이틀 + 설명 + 버튼 */}
       <div className="admin-header-wrapper">
         <Card>
-          <CardContent className="admin-header-card-content">
-            <h1 className="text-lg font-bold tracking-tight">Group 관리</h1>
-            <p className="text-sm text-muted-foreground">사용자 그룹을 생성하고 관리합니다 (총 {initialGroups.length}개)</p>
-            <div className="flex-1" />
-            <Button onClick={handleCreate}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              새 Group 생성
-            </Button>
+          <CardContent className="admin-header-card-content flex-col items-start">
+            <div className="flex items-center w-full gap-2">
+              <h1 className="text-lg font-bold tracking-tight">Group 관리</h1>
+              <p className="text-sm text-muted-foreground">사용자 그룹을 생성하고 관리합니다 (총 {filteredGroups.length}개 / {initialGroups.length}개)</p>
+              <div className="flex-1" />
+              <Button onClick={handleCreate}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                새 Group 생성
+              </Button>
+            </div>
+            <div className="flex gap-2 items-center w-full mt-2">
+              <Input placeholder="Group Name..." value={groupNameFilter} onChange={(e) => setGroupNameFilter(e.target.value)} className="w-48" />
+              <Input placeholder="User Email..." value={userNameFilter} onChange={(e) => setUserNameFilter(e.target.value)} className="w-48" />
+              <Button variant="outline" size="icon" title="필터 적용" disabled={!hasFilters}><Search className="h-4 w-4" /></Button>
+              <Button variant="outline" size="icon" onClick={handleResetFilters} title="필터 초기화" disabled={!hasFilters}><XCircle className="h-4 w-4" /></Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -124,7 +165,7 @@ export function GroupList({ initialGroups }: { initialGroups: Group[] }) {
             {pagination.paginatedData.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                  등록된 Group이 없습니다
+                  {hasFilters ? '조건에 맞는 Group이 없습니다' : '등록된 Group이 없습니다'}
                 </TableCell>
               </TableRow>
             ) : (

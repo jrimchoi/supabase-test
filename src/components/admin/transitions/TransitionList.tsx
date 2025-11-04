@@ -23,7 +23,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { ScrollableTable } from '@/components/ui/scrollable-table'
 import { TransitionDialog } from './TransitionDialog'
-import { PlusCircle, Edit, Trash2, ArrowRight } from 'lucide-react'
+import { PlusCircle, Edit, Trash2, ArrowRight, Search, XCircle } from 'lucide-react'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { deleteTransition } from '@/app/admin/transitions/actions'
@@ -69,6 +69,8 @@ export function TransitionList({
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [policySearch, setPolicySearch] = useState<string>('')
+  const [fromStateFilter, setFromStateFilter] = useState<string>('')
+  const [toStateFilter, setToStateFilter] = useState<string>('')
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const router = useRouter()
@@ -110,8 +112,14 @@ export function TransitionList({
 
   // 필터링
   const filteredTransitions = initialTransitions.filter((transition) => {
-    return !policySearch || policySearch.length < 2 || 
+    const matchPolicy = !policySearch || policySearch.length < 2 || 
       transition.fromState.policy.name.toLowerCase().includes(policySearch.toLowerCase())
+    const matchFromState = !fromStateFilter || 
+      transition.fromState.name.toLowerCase().includes(fromStateFilter.toLowerCase())
+    const matchToState = !toStateFilter || 
+      transition.toState.name.toLowerCase().includes(toStateFilter.toLowerCase())
+    
+    return matchPolicy && matchFromState && matchToState
   })
 
   // 페이징
@@ -126,6 +134,16 @@ export function TransitionList({
     setPolicySearch(value)
     setCurrentPage(1)
   }
+
+  // 필터 초기화
+  const handleResetFilters = () => {
+    setPolicySearch('')
+    setFromStateFilter('')
+    setToStateFilter('')
+    setCurrentPage(1)
+  }
+
+  const hasFilters = policySearch || fromStateFilter || toStateFilter
 
   return (
     <div className="flex flex-col h-full mt-2.5">
@@ -179,6 +197,41 @@ export function TransitionList({
                   </div>
                 )}
               </div>
+              <Input
+                placeholder="From State..."
+                value={fromStateFilter}
+                onChange={(e) => {
+                  setFromStateFilter(e.target.value)
+                  setCurrentPage(1)
+                }}
+                className="w-48"
+              />
+              <Input
+                placeholder="To State..."
+                value={toStateFilter}
+                onChange={(e) => {
+                  setToStateFilter(e.target.value)
+                  setCurrentPage(1)
+                }}
+                className="w-48"
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                title="필터 적용"
+                disabled={!hasFilters}
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleResetFilters}
+                title="필터 초기화"
+                disabled={!hasFilters}
+              >
+                <XCircle className="h-4 w-4" />
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -202,7 +255,7 @@ export function TransitionList({
             {paginatedTransitions.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                  {policySearch ? '조건에 맞는 Transition이 없습니다' : '등록된 Transition이 없습니다'}
+                  {hasFilters ? '조건에 맞는 Transition이 없습니다' : '등록된 Transition이 없습니다'}
                 </TableCell>
               </TableRow>
             ) : (
@@ -277,7 +330,7 @@ export function TransitionList({
       {/* 클라이언트 사이드 페이징 */}
       <div className="admin-table-spacing flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
-          총 {totalFiltered}개 항목 ({policySearch ? '필터링됨' : '전체'})
+          총 {totalFiltered}개 항목 ({hasFilters ? '필터링됨' : '전체'})
         </div>
         <div className="flex items-center gap-2">
           <Select

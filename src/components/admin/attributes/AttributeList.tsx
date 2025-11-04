@@ -1,16 +1,17 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { ScrollableTable } from '@/components/ui/scrollable-table'
 import { ClientPagination } from '@/components/ui/client-pagination'
 import { useClientPagination } from '@/hooks/useClientPagination'
 import { AttributeDialog } from './AttributeDialog'
-import { PlusCircle, Edit, Trash2 } from 'lucide-react'
+import { PlusCircle, Edit, Trash2, Search, XCircle } from 'lucide-react'
 import { deleteAttribute } from '@/app/admin/attributes/actions'
 
 type Attribute = {
@@ -28,8 +29,32 @@ export function AttributeList({ initialAttributes }: { initialAttributes: Attrib
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
-  // 페이징 훅 사용
-  const pagination = useClientPagination(initialAttributes, { initialPageSize: 20 })
+  // 필터 상태
+  const [nameFilter, setNameFilter] = useState('')
+  const [labelFilter, setLabelFilter] = useState('')
+
+  // 필터링된 데이터
+  const filteredAttributes = useMemo(() => {
+    return initialAttributes.filter((attr) => {
+      const matchName = !nameFilter || 
+        attr.name.toLowerCase().includes(nameFilter.toLowerCase())
+      const matchLabel = !labelFilter || 
+        attr.label.toLowerCase().includes(labelFilter.toLowerCase())
+      
+      return matchName && matchLabel
+    })
+  }, [initialAttributes, nameFilter, labelFilter])
+
+  // 페이징 훅 사용 (필터링된 데이터)
+  const pagination = useClientPagination(filteredAttributes, { initialPageSize: 20 })
+
+  // 필터 초기화
+  const handleResetFilters = () => {
+    setNameFilter('')
+    setLabelFilter('')
+  }
+
+  const hasFilters = nameFilter || labelFilter
 
   const handleDelete = (attr: Attribute) => {
     if (!confirm(`"${attr.label}" Attribute를 삭제하시겠습니까?\n\n⚠️ 모든 Type에서 제거됩니다!`)) return
@@ -45,14 +70,22 @@ export function AttributeList({ initialAttributes }: { initialAttributes: Attrib
       {/* 헤더 카드: 타이틀 + 설명 + 버튼 */}
       <div className="admin-header-wrapper">
         <Card>
-          <CardContent className="admin-header-card-content">
-            <h1 className="text-lg font-bold tracking-tight">Attribute 관리</h1>
-            <p className="text-sm text-muted-foreground">공통 속성을 정의하고 Type에 할당합니다 (총 {initialAttributes.length}개)</p>
-            <div className="flex-1" />
-            <Button onClick={() => { setSelected(null); setIsDialogOpen(true) }}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              새 Attribute 생성
-            </Button>
+          <CardContent className="admin-header-card-content flex-col items-start">
+            <div className="flex items-center w-full gap-2">
+              <h1 className="text-lg font-bold tracking-tight">Attribute 관리</h1>
+              <p className="text-sm text-muted-foreground">공통 속성을 정의하고 Type에 할당합니다 (총 {filteredAttributes.length}개 / {initialAttributes.length}개)</p>
+              <div className="flex-1" />
+              <Button onClick={() => { setSelected(null); setIsDialogOpen(true) }}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                새 Attribute 생성
+              </Button>
+            </div>
+            <div className="flex gap-2 items-center w-full mt-2">
+              <Input placeholder="Attribute Name..." value={nameFilter} onChange={(e) => setNameFilter(e.target.value)} className="w-48" />
+              <Input placeholder="Label..." value={labelFilter} onChange={(e) => setLabelFilter(e.target.value)} className="w-48" />
+              <Button variant="outline" size="icon" title="필터 적용" disabled={!hasFilters}><Search className="h-4 w-4" /></Button>
+              <Button variant="outline" size="icon" onClick={handleResetFilters} title="필터 초기화" disabled={!hasFilters}><XCircle className="h-4 w-4" /></Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -72,7 +105,7 @@ export function AttributeList({ initialAttributes }: { initialAttributes: Attrib
           </TableHeader>
           <TableBody>
             {pagination.paginatedData.length === 0 ? (
-              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">등록된 Attribute가 없습니다</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">{hasFilters ? '조건에 맞는 Attribute가 없습니다' : '등록된 Attribute가 없습니다'}</TableCell></TableRow>
             ) : (
               pagination.paginatedData.map((attr) => (
                 <TableRow key={attr.id}>

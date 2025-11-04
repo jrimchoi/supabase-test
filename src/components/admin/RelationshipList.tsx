@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { PlusCircle, Pencil, Trash2 } from 'lucide-react'
+import { PlusCircle, Pencil, Trash2, Search, XCircle } from 'lucide-react'
 import { ScrollableTable } from '@/components/ui/scrollable-table'
 import {
   Table,
@@ -60,6 +61,34 @@ const cardinalityColors: Record<string, 'default' | 'secondary' | 'destructive' 
 export function RelationshipList({ initialData }: Props) {
   const router = useRouter()
   const [relationships] = useState<Relationship[]>(initialData)
+  
+  // 필터 상태
+  const [nameFilter, setNameFilter] = useState('')
+  const [fromTypeFilter, setFromTypeFilter] = useState('')
+  const [toTypeFilter, setToTypeFilter] = useState('')
+
+  // 필터링된 데이터
+  const filteredRelationships = useMemo(() => {
+    return relationships.filter((rel) => {
+      const matchName = !nameFilter || 
+        rel.name.toLowerCase().includes(nameFilter.toLowerCase())
+      const matchFromType = !fromTypeFilter || 
+        rel.fromType.name.toLowerCase().includes(fromTypeFilter.toLowerCase())
+      const matchToType = !toTypeFilter || 
+        rel.toType.name.toLowerCase().includes(toTypeFilter.toLowerCase())
+      
+      return matchName && matchFromType && matchToType
+    })
+  }, [relationships, nameFilter, fromTypeFilter, toTypeFilter])
+
+  // 필터 초기화
+  const handleResetFilters = () => {
+    setNameFilter('')
+    setFromTypeFilter('')
+    setToTypeFilter('')
+  }
+
+  const hasFilters = nameFilter || fromTypeFilter || toTypeFilter
 
   const handleCreate = () => {
     router.push('/admin/relationships/new')
@@ -93,16 +122,25 @@ export function RelationshipList({ initialData }: Props) {
     <div className="flex flex-col h-full mt-2.5">
       <div className="admin-header-wrapper">
         <Card>
-          <CardContent className="admin-header-card-content">
-            <h1 className="text-lg font-bold tracking-tight">Relationships</h1>
-            <p className="text-sm text-muted-foreground">
-              Type 간 관계 정의 (카디널리티, 속성)
-            </p>
-            <div className="flex-1" />
-            <Button onClick={handleCreate}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              새 관계 생성
-            </Button>
+          <CardContent className="admin-header-card-content flex-col items-start">
+            <div className="flex items-center w-full gap-2">
+              <h1 className="text-lg font-bold tracking-tight">Relationships</h1>
+              <p className="text-sm text-muted-foreground">
+                Type 간 관계 정의 (총 {filteredRelationships.length}개 / {relationships.length}개)
+              </p>
+              <div className="flex-1" />
+              <Button onClick={handleCreate}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                새 관계 생성
+              </Button>
+            </div>
+            <div className="flex gap-2 items-center w-full mt-2">
+              <Input placeholder="Relationship Name..." value={nameFilter} onChange={(e) => setNameFilter(e.target.value)} className="w-48" />
+              <Input placeholder="From Type..." value={fromTypeFilter} onChange={(e) => setFromTypeFilter(e.target.value)} className="w-48" />
+              <Input placeholder="To Type..." value={toTypeFilter} onChange={(e) => setToTypeFilter(e.target.value)} className="w-48" />
+              <Button variant="outline" size="icon" title="필터 적용" disabled={!hasFilters}><Search className="h-4 w-4" /></Button>
+              <Button variant="outline" size="icon" onClick={handleResetFilters} title="필터 초기화" disabled={!hasFilters}><XCircle className="h-4 w-4" /></Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -125,14 +163,14 @@ export function RelationshipList({ initialData }: Props) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {relationships.length === 0 ? (
+            {filteredRelationships.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={11} className="text-center text-muted-foreground">
-                  관계가 없습니다.
+                  {hasFilters ? '조건에 맞는 관계가 없습니다.' : '관계가 없습니다.'}
                 </TableCell>
               </TableRow>
             ) : (
-              relationships.map((rel) => (
+              filteredRelationships.map((rel) => (
                 <TableRow key={rel.id}>
                   <TableCell className="font-mono">{rel.name}</TableCell>
                   <TableCell>

@@ -20,6 +20,16 @@ async function getAllRoles() {
           userRoles: true,
         },
       },
+      userRoles: {
+        select: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+            },
+          },
+        },
+      },
     },
     orderBy: {
       createdAt: 'desc',

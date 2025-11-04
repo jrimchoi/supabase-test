@@ -27,6 +27,16 @@ async function getAllGroups() {
           userGroups: true,
         },
       },
+      userGroups: {
+        select: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+            },
+          },
+        },
+      },
     },
     orderBy: {
       createdAt: 'desc',

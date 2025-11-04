@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -12,13 +12,14 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { ScrollableTable } from '@/components/ui/scrollable-table'
 import { ClientPagination } from '@/components/ui/client-pagination'
 import { useClientPagination } from '@/hooks/useClientPagination'
 import { PolicyDialog } from './PolicyDialog'
 import { DeletePolicyDialog } from './DeletePolicyDialog'
-import { PlusCircle, Edit, Trash2 } from 'lucide-react'
+import { PlusCircle, Edit, Trash2, Search, XCircle } from 'lucide-react'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { updatePolicy } from '@/app/admin/policies/actions'
@@ -31,21 +32,53 @@ type Policy = {
   isActive: boolean
   createdAt: Date
   updatedAt: Date
+  types: Array<{ id: string; name: string }>
+}
+
+type Type = {
+  id: string
+  name: string
+  policyId: string
 }
 
 type Props = Readonly<{
   initialPolicies: Policy[]
+  allTypes: Type[]
 }>
 
-export function PolicyList({ initialPolicies }: Props) {
+export function PolicyList({ initialPolicies, allTypes }: Props) {
   const [policyToDelete, setPolicyToDelete] = useState<Policy | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [, startTransition] = useTransition()
   const router = useRouter()
 
-  // 페이징 훅 사용
-  const pagination = useClientPagination(initialPolicies, { initialPageSize: 20 })
+  // 필터 상태
+  const [policyNameFilter, setPolicyNameFilter] = useState('')
+  const [typeNameFilter, setTypeNameFilter] = useState('')
+
+  // 필터링된 데이터
+  const filteredPolicies = useMemo(() => {
+    return initialPolicies.filter((policy) => {
+      const matchPolicyName = !policyNameFilter || 
+        policy.name.toLowerCase().includes(policyNameFilter.toLowerCase())
+      const matchTypeName = !typeNameFilter || 
+        policy.types.some(t => t.name.toLowerCase().includes(typeNameFilter.toLowerCase()))
+      
+      return matchPolicyName && matchTypeName
+    })
+  }, [initialPolicies, policyNameFilter, typeNameFilter])
+
+  // 페이징 훅 사용 (필터링된 데이터)
+  const pagination = useClientPagination(filteredPolicies, { initialPageSize: 20 })
+
+  // 필터 초기화
+  const handleResetFilters = () => {
+    setPolicyNameFilter('')
+    setTypeNameFilter('')
+  }
+
+  const hasFilters = policyNameFilter || typeNameFilter
 
   const handleCreate = () => {
     setIsDialogOpen(true)
@@ -79,17 +112,55 @@ export function PolicyList({ initialPolicies }: Props) {
 
   return (
     <div className="flex flex-col h-full mt-2.5">
-      {/* 헤더 카드: 타이틀 + 설명 + 버튼 */}
+      {/* 헤더 카드: 타이틀 + 설명 + 버튼 + 필터 */}
       <div className="admin-header-wrapper">
         <Card>
-          <CardContent className="admin-header-card-content">
-            <h1 className="text-lg font-bold tracking-tight">Policy 관리</h1>
-            <p className="text-sm text-muted-foreground">권한 정책을 생성하고 관리합니다 (총 {initialPolicies.length}개)</p>
-            <div className="flex-1" />
-            <Button onClick={handleCreate}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              새 Policy 생성
-            </Button>
+          <CardContent className="admin-header-card-content flex-col items-start">
+            {/* 타이틀 행 */}
+            <div className="flex items-center w-full gap-2">
+              <h1 className="text-lg font-bold tracking-tight">Policy 관리</h1>
+              <p className="text-sm text-muted-foreground">
+                권한 정책을 생성하고 관리합니다 (총 {filteredPolicies.length}개 / {initialPolicies.length}개)
+              </p>
+              <div className="flex-1" />
+              <Button onClick={handleCreate}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                새 Policy 생성
+              </Button>
+            </div>
+
+            {/* 필터 행 */}
+            <div className="flex gap-2 items-center w-full mt-2">
+              <Input
+                placeholder="Policy Name..."
+                value={policyNameFilter}
+                onChange={(e) => setPolicyNameFilter(e.target.value)}
+                className="w-48"
+              />
+              <Input
+                placeholder="Type Name..."
+                value={typeNameFilter}
+                onChange={(e) => setTypeNameFilter(e.target.value)}
+                className="w-48"
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                title="필터 적용"
+                disabled={!hasFilters}
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleResetFilters}
+                title="필터 초기화"
+                disabled={!hasFilters}
+              >
+                <XCircle className="h-4 w-4" />
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -111,7 +182,9 @@ export function PolicyList({ initialPolicies }: Props) {
               {pagination.paginatedData.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    등록된 Policy가 없습니다
+                    {hasFilters
+                      ? '조건에 맞는 Policy가 없습니다'
+                      : '등록된 Policy가 없습니다'}
                   </TableCell>
                 </TableRow>
               ) : (
