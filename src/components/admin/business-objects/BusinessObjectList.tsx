@@ -31,7 +31,7 @@ type BusinessObject = {
   updatedAt: Date
   type: {
     id: string
-    name: string
+    name: string | null
     description: string | null
   } | null
   policy: {
@@ -199,7 +199,7 @@ export function BusinessObjectList({
                   <TableCell>
                     {obj.type ? (
                       <div className="text-xs">
-                        <div className="font-medium">{obj.type.name}</div>
+                        <div className="font-medium">{obj.type.name || '(이름 없음)'}</div>
                         {obj.type.description && (
                           <div className="text-muted-foreground">{obj.type.description}</div>
                         )}

@@ -23,11 +23,11 @@ type Relationship = {
   cardinality: string
   fromType: {
     id: string
-    name: string
+    name: string | null
   }
   toType: {
     id: string
-    name: string
+    name: string | null
   }
 }
 
@@ -37,7 +37,7 @@ type BusinessObject = {
   description: string | null
   type: {
     id: string
-    name: string
+    name: string | null
   } | null
 }
 
@@ -53,11 +53,11 @@ type ObjectRelationship = {
     cardinality: string
     fromType: {
       id: string
-      name: string
+      name: string | null
     }
     toType: {
       id: string
-      name: string
+      name: string | null
     }
   }
   fromObject: BusinessObject
@@ -235,7 +235,7 @@ export function BusinessObjectRelationshipForm({ objectRelationship, relationshi
                 <SelectContent>
                   {relationships.map((rel) => (
                     <SelectItem key={rel.id} value={rel.id}>
-                      {rel.name} ({rel.fromType.name} → {rel.toType.name})
+                      {rel.name} ({rel.fromType.name || '(이름 없음)'} → {rel.toType.name || '(이름 없음)'})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -243,9 +243,9 @@ export function BusinessObjectRelationshipForm({ objectRelationship, relationshi
               {selectedRelationship && (
                 <div className="mt-2 flex gap-2">
                   <Badge variant="outline">{selectedRelationship.cardinality}</Badge>
-                  <Badge variant="secondary">{selectedRelationship.fromType.name}</Badge>
+                  <Badge variant="secondary">{selectedRelationship.fromType.name || '(이름 없음)'}</Badge>
                   <span className="text-muted-foreground">→</span>
-                  <Badge variant="secondary">{selectedRelationship.toType.name}</Badge>
+                  <Badge variant="secondary">{selectedRelationship.toType.name || '(이름 없음)'}</Badge>
                 </div>
               )}
             </div>
@@ -253,7 +253,7 @@ export function BusinessObjectRelationshipForm({ objectRelationship, relationshi
             {selectedRelationship && (
               <>
                 <div className="relative">
-                  <Label htmlFor="fromObject">From Object ({selectedRelationship.fromType.name}) *</Label>
+                  <Label htmlFor="fromObject">From Object ({selectedRelationship.fromType.name || '(이름 없음)'}) *</Label>
                   <div className="relative">
                     <Input
                       id="fromObject"
@@ -298,7 +298,7 @@ export function BusinessObjectRelationshipForm({ objectRelationship, relationshi
                 </div>
 
                 <div className="relative">
-                  <Label htmlFor="toObject">To Object ({selectedRelationship.toType.name}) *</Label>
+                  <Label htmlFor="toObject">To Object ({selectedRelationship.toType.name || '(이름 없음)'}) *</Label>
                   <div className="relative">
                     <Input
                       id="toObject"
