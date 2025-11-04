@@ -24,7 +24,7 @@ import { deleteType } from '@/app/admin/types/actions'
 
 type TypeListItem = {
   id: string
-  name: string
+  name: string | null
   description: string | null
   prefix: string | null
   createdAt: Date
@@ -35,7 +35,7 @@ type TypeListItem = {
   }
   parent: {
     id: string
-    name: string
+    name: string | null
     description: string | null
   } | null
   _count?: {
@@ -63,7 +63,7 @@ export function TypeList({
   const filteredTypes = useMemo(() => {
     return initialTypes.filter((type) => {
       const matchTypeName = !typeNameFilter || 
-        type.name.toLowerCase().includes(typeNameFilter.toLowerCase())
+        (type.name && type.name.toLowerCase().includes(typeNameFilter.toLowerCase()))
       const matchPolicyName = !policyNameFilter || 
         type.policy.name.toLowerCase().includes(policyNameFilter.toLowerCase())
       
@@ -93,7 +93,7 @@ export function TypeList({
   }
 
   const handleDelete = async (type: TypeListItem) => {
-    if (!confirm(`"${type.name}" 타입을 삭제하시겠습니까?`)) {
+    if (!confirm(`"${type.name || '(이름 없음)'}" 타입을 삭제하시겠습니까?`)) {
       return
     }
 
@@ -155,7 +155,7 @@ export function TypeList({
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
-                      {type.name}
+                      {type.name || '(이름 없음)'}
                     </code>
                     {type.parent && (
                       <GitBranch className="h-3 w-3 text-muted-foreground" />

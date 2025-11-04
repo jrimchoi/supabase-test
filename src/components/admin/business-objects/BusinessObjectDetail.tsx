@@ -47,15 +47,12 @@ type BusinessObjectData = {
   policyId: string
   currentState: string
   description: string | null
-  owner: string | null
-  createdBy: string | null
-  updatedBy: string | null
   data: unknown
   createdAt: Date
   updatedAt: Date
   type: {
     id: string
-    name: string
+    name: string | null
     description: string | null
     prefix: string | null
     policy: {
@@ -202,7 +199,7 @@ export function BusinessObjectDetail({
               <div>
                 <Label className="text-xs text-muted-foreground">Type</Label>
                 <div className="mt-1">
-                  <div className="font-medium text-sm">{object.type.name}</div>
+                  <div className="font-medium text-sm">{object.type.name || '(이름 없음)'}</div>
                   {object.type.description && (
                     <div className="text-xs text-muted-foreground">{object.type.description}</div>
                   )}
@@ -212,7 +209,7 @@ export function BusinessObjectDetail({
             {object.type && (
               <div>
                 <Label className="text-xs text-muted-foreground">Type (EAV)</Label>
-                <div className="mt-1 text-sm">{object.type.name}</div>
+                <div className="mt-1 text-sm">{object.type.name || '(이름 없음)'}</div>
               </div>
             )}
             <div>

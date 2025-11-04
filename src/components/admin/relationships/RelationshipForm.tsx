@@ -20,7 +20,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 
 type Type = {
   id: string
-  name: string
+  name: string | null
   description: string | null
 }
 
@@ -247,11 +247,11 @@ export function RelationshipForm({ relationship }: Props) {
                         className="w-full px-4 py-2 text-left hover:bg-accent"
                         onClick={() => {
                           setFromTypeId(type.id)
-                          setFromTypeSearch(type.name)
+                          setFromTypeSearch(type.name || '')
                           setShowFromTypeResults(false)
                         }}
                       >
-                        <div className="font-medium">{type.name}</div>
+                        <div className="font-medium">{type.name || '(이름 없음)'}</div>
                         {type.description && (
                           <div className="text-xs text-muted-foreground">
                             {type.description}
@@ -287,11 +287,11 @@ export function RelationshipForm({ relationship }: Props) {
                         className="w-full px-4 py-2 text-left hover:bg-accent"
                         onClick={() => {
                           setToTypeId(type.id)
-                          setToTypeSearch(type.name)
+                          setToTypeSearch(type.name || '')
                           setShowToTypeResults(false)
                         }}
                       >
-                        <div className="font-medium">{type.name}</div>
+                        <div className="font-medium">{type.name || '(이름 없음)'}</div>
                         {type.description && (
                           <div className="text-xs text-muted-foreground">
                             {type.description}
