@@ -20,7 +20,7 @@ export const stateDetailQuery = Prisma.validator<Prisma.StateDefaultArgs>()({
         name: true,
       },
     },
-    transitionsFrom: {
+    fromTransitions: {
       include: {
         toState: {
           select: {
@@ -30,7 +30,7 @@ export const stateDetailQuery = Prisma.validator<Prisma.StateDefaultArgs>()({
         },
       },
     },
-    transitionsTo: {
+    toTransitions: {
       include: {
         fromState: {
           select: {
@@ -43,7 +43,6 @@ export const stateDetailQuery = Prisma.validator<Prisma.StateDefaultArgs>()({
     _count: {
       select: {
         permissions: true,
-        userPermissions: true,
       },
     },
   },
@@ -63,8 +62,8 @@ export const stateListQuery = Prisma.validator<Prisma.StateDefaultArgs>()({
     _count: {
       select: {
         permissions: true,
-        transitionsFrom: true,
-        transitionsTo: true,
+        fromTransitions: true,
+        toTransitions: true,
       },
     },
   },

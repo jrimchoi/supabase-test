@@ -24,7 +24,6 @@ export const typeDetailQuery = Prisma.validator<Prisma.TypeDefaultArgs>()({
     parent: {
       select: {
         id: true,
-        type: true,
         name: true,
         description: true,
       },
@@ -39,9 +38,6 @@ export const typeDetailQuery = Prisma.validator<Prisma.TypeDefaultArgs>()({
             attrType: true,
           },
         },
-      },
-      orderBy: {
-        order: 'asc',
       },
     },
     _count: {

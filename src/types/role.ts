@@ -23,6 +23,7 @@ export const roleDetailQuery = Prisma.validator<Prisma.RoleDefaultArgs>()({
     _count: {
       select: {
         userRoles: true,
+        permissions: true,
       },
     },
   },
@@ -36,6 +37,7 @@ export const roleListQuery = Prisma.validator<Prisma.RoleDefaultArgs>()({
     _count: {
       select: {
         userRoles: true,
+        permissions: true,
       },
     },
   },

@@ -1,7 +1,7 @@
 # Supabase OAuth 설정 확인
 
 ## 1. Supabase Dashboard 접속
-https://supabase.com/dashboard/project/ckujlkdumhhtjkinngjf
+https://supabase.com/dashboard/project/YOUR_PROJECT_ID
 
 ## 2. Authentication → URL Configuration 확인
 
@@ -35,8 +35,8 @@ Supabase는 기본적으로 PKCE를 지원하지만, 다음을 확인하세요:
 `.env.local` 파일에 다음이 있는지 확인:
 ```env
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
-NEXT_PUBLIC_SUPABASE_URL=https://ckujlkdumhhtjkinngjf.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 ```
 
 ## 문제 해결

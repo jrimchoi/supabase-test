@@ -22,7 +22,6 @@ export const policyDetailQuery = Prisma.validator<Prisma.PolicyDefaultArgs>()({
     types: {
       select: {
         id: true,
-        type: true,
         name: true,
       },
     },
