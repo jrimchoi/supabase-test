@@ -32,31 +32,16 @@ function AuthCallbackContent() {
 				setStatus("세션 교환(자동) 대기...");
 				logAuth("/auth/callback (client) start", { url, type, redirectTo, site: window.location.origin });
 				
-				// Code가 있으면 수동으로 교환 시도
-				let session = null;
+				// detectSessionInUrl: true 이므로 자동 교환만 사용
+				console.log("🔵 [CALLBACK] 자동 교환 대기 중...");
+				let session = (await supabase.auth.getSession()).data.session;
+				console.log("🔵 [CALLBACK] 첫 세션 체크", { hasSession: !!session });
 				
-				if (code) {
-					console.log("🔵 [CALLBACK] Code 발견, 수동 교환 시도");
-					const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-					if (error) {
-						console.error("❌ [CALLBACK] exchangeCodeForSession 오류", error);
-					} else {
-						console.log("✅ [CALLBACK] exchangeCodeForSession 성공");
-						session = data.session;
-					}
-				}
-				
-				// 수동 교환 실패 시, detectSessionInUrl 자동 교환 확인
-				if (!session) {
-					console.log("🔵 [CALLBACK] 자동 교환 대기 중...");
+				// 자동 교환 완료될 때까지 대기 (최대 3초)
+				for (let i = 0; i < 20 && !session; i++) {
+					console.log(`🔵 [CALLBACK] 세션 대기 중... (${i + 1}/20)`);
+					await new Promise((r) => setTimeout(r, 150));
 					session = (await supabase.auth.getSession()).data.session;
-					console.log("🔵 [CALLBACK] 첫 세션 체크", { hasSession: !!session });
-					
-					for (let i = 0; i < 20 && !session; i++) {
-						console.log(`🔵 [CALLBACK] 세션 대기 중... (${i + 1}/20)`);
-						await new Promise((r) => setTimeout(r, 150));
-						session = (await supabase.auth.getSession()).data.session;
-					}
 				}
 				
 				if (!session) {
